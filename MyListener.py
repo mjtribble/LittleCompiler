@@ -29,10 +29,15 @@ class MyListener(LittleListener):
     def enterScope(self, name):
         symbolTable.append((name, []))
         stack.append(name)
+        print("added " + name + " to the symbol table and the stack.")
 
+    # pops the current scope off the stack
     def exitScope(self):
-        old_scope = stack.pop()
-        print(old_scope + " popped off stack")
+        if stack:
+            popped_scope = stack.pop()
+            print("popped " + popped_scope + "off of the stack.")
+        else:
+            print("Stack is empty!")
 
 
     # Return the Symbol Table created
@@ -47,8 +52,7 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#prog.
     def exitProg(self, ctx:LittleParser.ProgContext):
-        popped_scope = stack.pop()
-        print("popped " + popped_scope + "off of the stack.")
+        self.exitScope()
 
      # Enter a parse tree produced by LittleParser#func_decl.
     def enterFunc_decl(self, ctx:LittleParser.Func_declContext):
@@ -397,11 +401,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#mulop.
     def exitMulop(self, ctx:LittleParser.MulopContext):
         pass
-
-
-
-
-
 
 
     # Enter a parse tree produced by LittleParser#cond.
