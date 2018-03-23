@@ -2,6 +2,8 @@
 from antlr4 import *
 from LittleListener import LittleListener
 from my_stack import MyStack
+import collections
+
 
 
 if __name__ is not None and "." in __name__:
@@ -14,16 +16,15 @@ class MyListener(LittleListener):
 
     #Create a dictionary to hold the symbol table
     global symbolTable
-    symbolTable = []
+    symbolTable = collections.OrderedDict()
 
     #Create a stack to keep track of which scope we are in
-    # stack.append(), stack.pop()
     global stack
     stack = MyStack()
 
     # creates a new symbol table scope
     def enterScope(self, name):
-        symbolTable.append((name, []))
+        symbolTable[name] = collections.OrderedDict()
         stack.push(name)
         print("added " + name + " to the symbol table and the stack.")
 
@@ -33,7 +34,7 @@ class MyListener(LittleListener):
             print("Stack is empty!")
         else:
             popped_scope = stack.pop()
-            print("popped " + popped_scope + "off of the stack.")
+            print("popped " + popped_scope + " off of the stack.")
 
 
     # Return the Symbol Table created
@@ -57,7 +58,7 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#func_decl.
     def exitFunc_decl(self, ctx:LittleParser.Func_declContext):
-        pass
+        self.exitScope()
 
     # Enter a parse tree produced by LittleParser#if_stmt.
     def enterIf_stmt(self, ctx:LittleParser.If_stmtContext):
@@ -96,9 +97,11 @@ class MyListener(LittleListener):
         v_type = ctx.getChild(0).getText()
         print("v_type = " + v_type)
         name_list = ctx.getChild(1).getText().split(',')
-        scope = filter(stack.peek(), name_list)
+        print("Top of the stack: " + stack.peek())
+        # scope = filter(stack.peek(), name_list)
+        scope = stack.peek()
         for n in name_list:
-            symbolTable[scope[0]].append((v_type, n, ''))
+            symbolTable[stack.peek()][n] = (v_type, '')
 
     # Exit a parse tree produced by LittleParser#var_decl.
     def exitVar_decl(self, ctx:LittleParser.Var_declContext):
