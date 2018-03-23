@@ -1,6 +1,7 @@
 # Generated from /home/ubuntu/Little.g4 by ANTLR 4.7.1
 from antlr4 import *
 from LittleListener import LittleListener
+from my_stack import MyStack
 
 
 if __name__ is not None and "." in __name__:
@@ -10,11 +11,6 @@ else:
 
 # This class defines a complete listener for a parse tree produced by LittleParser.
 class MyListener(LittleListener):
-#      mylist = []
-
-# mylist.append(('key', 'value'))
-
-#  mylist.insert(0, ('foo', 'bar'))
 
     #Create a dictionary to hold the symbol table
     global symbolTable
@@ -23,21 +19,21 @@ class MyListener(LittleListener):
     #Create a stack to keep track of which scope we are in
     # stack.append(), stack.pop()
     global stack
-    stack = []
+    stack = MyStack()
 
     # creates a new symbol table scope
     def enterScope(self, name):
         symbolTable.append((name, []))
-        stack.append(name)
+        stack.push(name)
         print("added " + name + " to the symbol table and the stack.")
 
     # pops the current scope off the stack
     def exitScope(self):
-        if stack:
+        if stack.isEmpty():
+            print("Stack is empty!")
+        else:
             popped_scope = stack.pop()
             print("popped " + popped_scope + "off of the stack.")
-        else:
-            print("Stack is empty!")
 
 
     # Return the Symbol Table created
@@ -98,10 +94,11 @@ class MyListener(LittleListener):
      # Enter a parse tree produced by LittleParser#var_decl.
     def enterVar_decl(self, ctx:LittleParser.Var_declContext):
         v_type = ctx.getChild(0).getText()
+        print("v_type = " + v_type)
         name_list = ctx.getChild(1).getText().split(',')
-        scope = filter(stack[0], name_list)
+        scope = filter(stack.peek(), name_list)
         for n in name_list:
-            symbolTable[scope].append((v_type, n, ''))
+            symbolTable[scope[0]].append((v_type, n, ''))
 
     # Exit a parse tree produced by LittleParser#var_decl.
     def exitVar_decl(self, ctx:LittleParser.Var_declContext):
