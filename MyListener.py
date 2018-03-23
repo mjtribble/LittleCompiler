@@ -24,28 +24,46 @@ class MyListener(LittleListener):
 
     # creates a new symbol table scope
     def enterScope(self, name):
+        scope_dict = collections.OrderedDict()
+
         symbolTable[name] = collections.OrderedDict()
         stack.push(name)
-        print("added " + name + " to the symbol table and the stack.")
+        # print("added " + name + " to the symbol table and the stack.")
 
     # pops the current scope off the stack
     def exitScope(self):
         if stack.isEmpty():
-            print("Stack is empty!")
+            # print("Stack is empty!")
+            pass
         else:
             popped_scope = stack.pop()
-            print("popped " + popped_scope + " off of the stack.")
+            # print("popped " + popped_scope + " off of the stack.")
 
 
     # Return the Symbol Table created
     def getTable(self):
         return symbolTable
 
+    def printTable(self):
+        for scope, values in symbolTable.items():
+
+            print("Symbol table " + scope)
+            if values:
+                # print(values)
+                # for var_name, my_tuple in values:
+                for var_name in values:
+                    print("name " + var_name + " type " + values[var_name][0])
+                    # print()
+                    # var_type = my_tuple[0]
+                    # output = "name " + var_name + " type " + var_type
+                    # if my_tuple[1]:
+                    #     output += my_tuple[1]
+                    # print(output)
+
     # Scope Declaration Functions
     def enterProg(self, ctx:LittleParser.ProgContext):
         # print("entered program with MyParser!")
         self.enterScope("GLOBAL")
-        print('Symbol table GLOBAL')
 
     # Exit a parse tree produced by LittleParser#prog.
     def exitProg(self, ctx:LittleParser.ProgContext):
@@ -95,9 +113,9 @@ class MyListener(LittleListener):
      # Enter a parse tree produced by LittleParser#var_decl.
     def enterVar_decl(self, ctx:LittleParser.Var_declContext):
         v_type = ctx.getChild(0).getText()
-        print("v_type = " + v_type)
+        # print("v_type = " + v_type)
         name_list = ctx.getChild(1).getText().split(',')
-        print("Top of the stack: " + stack.peek())
+        # print("Top of the stack: " + stack.peek())
         # scope = filter(stack.peek(), name_list)
         scope = stack.peek()
         for n in name_list:
@@ -127,7 +145,8 @@ class MyListener(LittleListener):
 
     # Enter a parse tree produced by LittleParser#string_decl.
     def enterString_decl(self, ctx:LittleParser.String_declContext):
-        print(ctx.getText())
+        pass
+        # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#string_decl.
     def exitString_decl(self, ctx:LittleParser.String_declContext):
