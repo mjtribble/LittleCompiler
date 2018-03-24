@@ -14,13 +14,34 @@ else:
 # This class defines a complete listener for a parse tree produced by LittleParser.
 class MyListener(LittleListener):
 
-    #Create a dictionary to hold the symbol table
+    # Create a dictionary to hold the symbol table
     global symbolTable
     symbolTable = collections.OrderedDict()
 
-    #Create a stack to keep track of which scope we are in
+    # Create a stack to keep track of which scope we are in
     global stack
     stack = MyStack()
+
+    # Global block variable to count Block scopes
+    block = 0
+
+    # Global flag variable to indicate declaration errors
+    global flag
+    flag = False
+
+    # Global list to store repeated variable names
+    # Currently only using the first entry in this list
+    global errorNames
+    errorNames = []
+
+    # error method to set flag to true when an error is found
+    def error(self):
+        global flag
+        flag = True
+
+    # getError method to return error message as string
+    def getError(self, name):
+        return "DECLARATION ERROR " + name
 
     # creates a new symbol table scope
     def enterScope(self, name):
@@ -45,20 +66,30 @@ class MyListener(LittleListener):
         return symbolTable
 
     def printTable(self):
-        for scope, values in symbolTable.items():
+        # if there is a declaration error, return only the first error
+        # we should probably figure out how to exit the listener if this
+        # happens
+        if flag:
+            print(self.getError(errorNames[0]))
+        else:
+            for scope, values in symbolTable.items():
 
-            print("Symbol table " + scope)
-            if values:
-                # print(values)
-                # for var_name, my_tuple in values:
-                for var_name in values:
-                    print("name " + var_name + " type " + values[var_name][0])
-                    # print()
-                    # var_type = my_tuple[0]
-                    # output = "name " + var_name + " type " + var_type
-                    # if my_tuple[1]:
-                    #     output += my_tuple[1]
-                    # print(output)
+                print("Symbol table " + scope)
+                if values:
+                    # print(values)
+                    # for var_name, my_tuple in values:
+                    for var_name in values:
+                        if values[var_name][0] == "STRING":
+                            print("name " + var_name + " type " + values[var_name][0] + " value " + values[var_name][1])
+                        else:
+                            print("name " + var_name + " type " + values[var_name][0])
+
+    # getScopeName method to create numbered block names for conditionals
+    def getScopeName(self):
+        global block
+        self.block += 1
+        name = "BLOCK " + str(self.block)
+        return name
 
     # Scope Declaration Functions
     def enterProg(self, ctx:LittleParser.ProgContext):
@@ -73,42 +104,42 @@ class MyListener(LittleListener):
     def enterFunc_decl(self, ctx:LittleParser.Func_declContext):
         self.enterScope(ctx.getChild(2).getText())
 
-
     # Exit a parse tree produced by LittleParser#func_decl.
     def exitFunc_decl(self, ctx:LittleParser.Func_declContext):
         self.exitScope()
 
     # Enter a parse tree produced by LittleParser#if_stmt.
     def enterIf_stmt(self, ctx:LittleParser.If_stmtContext):
-        pass
+        name = self.getScopeName()
+        self.enterScope(name)
+
 
     # Exit a parse tree produced by LittleParser#if_stmt.
     def exitIf_stmt(self, ctx:LittleParser.If_stmtContext):
-        pass
+        self.exitScope()
+
 
     # Enter a parse tree produced by LittleParser#else_part.
     def enterElse_part(self, ctx:LittleParser.Else_partContext):
-        pass
+        if ctx.getChildCount() == 0:
+            pass
+        else:
+            name = self.getScopeName()
+            self.enterScope(name)
 
     # Exit a parse tree produced by LittleParser#else_part.
     def exitElse_part(self, ctx:LittleParser.Else_partContext):
-        pass
+        self.exitScope()
 
     # Enter a parse tree produced by LittleParser#while_stmt.
     def enterWhile_stmt(self, ctx:LittleParser.While_stmtContext):
-        pass
+        name = self.getScopeName()
+        self.enterScope(name)
 
     # Exit a parse tree produced by LittleParser#while_stmt.
     def exitWhile_stmt(self, ctx:LittleParser.While_stmtContext):
-        pass
+        self.exitScope()
 
-    # Enter a parse tree produced by LittleParser#im.
-    def enterIm(self, ctx:LittleParser.ImContext):
-        pass
-
-    # Exit a parse tree produced by LittleParser#im.
-    def exitIm(self, ctx:LittleParser.ImContext):
-        pass
 
      # Enter a parse tree produced by LittleParser#var_decl.
     def enterVar_decl(self, ctx:LittleParser.Var_declContext):
@@ -119,11 +150,54 @@ class MyListener(LittleListener):
         # scope = filter(stack.peek(), name_list)
         scope = stack.peek()
         for n in name_list:
-            symbolTable[stack.peek()][n] = (v_type, '')
+            if n in symbolTable[scope]:
+                self.error()
+                errorNames.append(n)
+            else:
+                symbolTable[scope][n] = (v_type, '')
 
     # Exit a parse tree produced by LittleParser#var_decl.
     def exitVar_decl(self, ctx:LittleParser.Var_declContext):
         pass
+    # Enter a parse tree produced by LittleParser#string_decl.
+    def enterString_decl(self, ctx:LittleParser.String_declContext):
+        v_type = ctx.getChild(0).getText()
+        name = ctx.getChild(1).getText()
+        val = ctx.getChild(3).getText()
+        scope = stack.peek()
+        symbolTable[scope][name] = (v_type, val)
+
+    # Exit a parse tree produced by LittleParser#string_decl.
+    def exitString_decl(self, ctx:LittleParser.String_declContext):
+        pass
+
+    # Enter a parse tree produced by LittleParser#param_decl.
+    def enterParam_decl(self, ctx:LittleParser.Param_declContext):
+        v_type = ctx.getChild(0).getText()
+        name = ctx.getChild(1).getText()
+        if v_type == "STRING":
+            val = ctx.getChild(3).getText()
+        else:
+            val = ''
+        scope = stack.peek()
+        symbolTable[scope][name] = (v_type, val)
+
+    # Exit a parse tree produced by LittleParser#param_decl.
+    def exitParam_decl(self, ctx:LittleParser.Param_declContext):
+        pass
+
+
+    #Nothing below here is important
+    #
+    #
+    #
+    #
+    #
+    #
+    #
+    #
+    #
+    # Unused parse tree methods
 
     # Enter a parse tree produced by LittleParser#pgm_body.
     def enterPgm_body(self, ctx:LittleParser.Pgm_bodyContext):
@@ -133,6 +207,13 @@ class MyListener(LittleListener):
     def exitPgm_body(self, ctx:LittleParser.Pgm_bodyContext):
         pass
 
+    # Enter a parse tree produced by LittleParser#im.
+    def enterIm(self, ctx:LittleParser.ImContext):
+        pass
+
+    # Exit a parse tree produced by LittleParser#im.
+    def exitIm(self, ctx:LittleParser.ImContext):
+        pass
 
     # Enter a parse tree produced by LittleParser#decl.
     def enterDecl(self, ctx:LittleParser.DeclContext):
@@ -142,17 +223,6 @@ class MyListener(LittleListener):
     def exitDecl(self, ctx:LittleParser.DeclContext):
         pass
 
-
-    # Enter a parse tree produced by LittleParser#string_decl.
-    def enterString_decl(self, ctx:LittleParser.String_declContext):
-        pass
-        # print(ctx.getText())
-
-    # Exit a parse tree produced by LittleParser#string_decl.
-    def exitString_decl(self, ctx:LittleParser.String_declContext):
-        pass
-
-
     # Enter a parse tree produced by LittleParser#st.
     def enterSt(self, ctx:LittleParser.StContext):
         pass
@@ -160,10 +230,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#st.
     def exitSt(self, ctx:LittleParser.StContext):
         pass
-
-
-
-
 
     # Enter a parse tree produced by LittleParser#var_type.
     def enterVar_type(self, ctx:LittleParser.Var_typeContext):
@@ -173,7 +239,6 @@ class MyListener(LittleListener):
     def exitVar_type(self, ctx:LittleParser.Var_typeContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#any_type.
     def enterAny_type(self, ctx:LittleParser.Any_typeContext):
         pass
@@ -182,17 +247,14 @@ class MyListener(LittleListener):
     def exitAny_type(self, ctx:LittleParser.Any_typeContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#id_list.
     def enterId_list(self, ctx:LittleParser.Id_listContext):
       #  print(ctx.getText())
       pass
 
-
     # Exit a parse tree produced by LittleParser#id_list.
     def exitId_list(self, ctx:LittleParser.Id_listContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#id_tail.
     def enterId_tail(self, ctx:LittleParser.Id_tailContext):
@@ -202,7 +264,6 @@ class MyListener(LittleListener):
     def exitId_tail(self, ctx:LittleParser.Id_tailContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#param_decl_list.
     def enterParam_decl_list(self, ctx:LittleParser.Param_decl_listContext):
         pass
@@ -210,16 +271,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#param_decl_list.
     def exitParam_decl_list(self, ctx:LittleParser.Param_decl_listContext):
         pass
-
-
-    # Enter a parse tree produced by LittleParser#param_decl.
-    def enterParam_decl(self, ctx:LittleParser.Param_declContext):
-        pass
-
-    # Exit a parse tree produced by LittleParser#param_decl.
-    def exitParam_decl(self, ctx:LittleParser.Param_declContext):
-        pass
-
 
     # Enter a parse tree produced by LittleParser#param_decl_tail.
     def enterParam_decl_tail(self, ctx:LittleParser.Param_decl_tailContext):
@@ -229,7 +280,6 @@ class MyListener(LittleListener):
     def exitParam_decl_tail(self, ctx:LittleParser.Param_decl_tailContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#func_declarations.
     def enterFunc_declarations(self, ctx:LittleParser.Func_declarationsContext):
         pass
@@ -237,10 +287,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#func_declarations.
     def exitFunc_declarations(self, ctx:LittleParser.Func_declarationsContext):
         pass
-
-
-
-
 
     # Enter a parse tree produced by LittleParser#func_body.
     def enterFunc_body(self, ctx:LittleParser.Func_bodyContext):
@@ -250,7 +296,6 @@ class MyListener(LittleListener):
     def exitFunc_body(self, ctx:LittleParser.Func_bodyContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#stmt_list.
     def enterStmt_list(self, ctx:LittleParser.Stmt_listContext):
         pass
@@ -258,7 +303,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#stmt_list.
     def exitStmt_list(self, ctx:LittleParser.Stmt_listContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#stmt.
     def enterStmt(self, ctx:LittleParser.StmtContext):
@@ -268,7 +312,6 @@ class MyListener(LittleListener):
     def exitStmt(self, ctx:LittleParser.StmtContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#base_stmt.
     def enterBase_stmt(self, ctx:LittleParser.Base_stmtContext):
         pass
@@ -276,7 +319,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#base_stmt.
     def exitBase_stmt(self, ctx:LittleParser.Base_stmtContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#assign_stmt.
     def enterAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
@@ -286,7 +328,6 @@ class MyListener(LittleListener):
     def exitAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#assign_expr.
     def enterAssign_expr(self, ctx:LittleParser.Assign_exprContext):
         pass
@@ -294,7 +335,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#assign_expr.
     def exitAssign_expr(self, ctx:LittleParser.Assign_exprContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#read_stmt.
     def enterRead_stmt(self, ctx:LittleParser.Read_stmtContext):
@@ -304,7 +344,6 @@ class MyListener(LittleListener):
     def exitRead_stmt(self, ctx:LittleParser.Read_stmtContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#write_stmt.
     def enterWrite_stmt(self, ctx:LittleParser.Write_stmtContext):
         pass
@@ -312,7 +351,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#write_stmt.
     def exitWrite_stmt(self, ctx:LittleParser.Write_stmtContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#return_stmt.
     def enterReturn_stmt(self, ctx:LittleParser.Return_stmtContext):
@@ -322,7 +360,6 @@ class MyListener(LittleListener):
     def exitReturn_stmt(self, ctx:LittleParser.Return_stmtContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#expr.
     def enterExpr(self, ctx:LittleParser.ExprContext):
         pass
@@ -330,7 +367,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#expr.
     def exitExpr(self, ctx:LittleParser.ExprContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#expr_prefix.
     def enterExpr_prefix(self, ctx:LittleParser.Expr_prefixContext):
@@ -340,7 +376,6 @@ class MyListener(LittleListener):
     def exitExpr_prefix(self, ctx:LittleParser.Expr_prefixContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#factor.
     def enterFactor(self, ctx:LittleParser.FactorContext):
         pass
@@ -348,7 +383,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#factor.
     def exitFactor(self, ctx:LittleParser.FactorContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#factor_prefix.
     def enterFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
@@ -358,7 +392,6 @@ class MyListener(LittleListener):
     def exitFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
         pass
 
-
     # Enter a parse tree produced by LittleParser#postfix_expr.
     def enterPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
         pass
@@ -366,7 +399,6 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#postfix_expr.
     def exitPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
         pass
-
 
     # Enter a parse tree produced by LittleParser#call_expr.
     def enterCall_expr(self, ctx:LittleParser.Call_exprContext):
