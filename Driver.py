@@ -13,14 +13,16 @@ def main(argv):
     listener = MyListener()
     walker = ParseTreeWalker()
     walker.walk(listener, tree)
-    print(listener.getTable())
+    # print(listener.getTable())
+    # listener.printTable()
 
-
+ 
 if __name__ == '__main__':
     main(sys.argv)
-
+    
 
 
     #for token in stream.tokens:
     #    print("Token Type:", lexer.symbolicNames[token.type])
     #    print("Value:", token.text)
+
