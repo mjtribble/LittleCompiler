@@ -6,6 +6,9 @@ class ASTNode:
         self.leftChild = None
         self.rightChild = None
         
+    def pprint(self):
+        print('Node: TYPE: %s VALUE: %s' % (self.node_type, self.value))
+        
     # def setOperator(self, operator):
     #     self.operator = operator
     

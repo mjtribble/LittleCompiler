@@ -64,7 +64,6 @@ class MyListener(LittleListener):
             pass
         else:
             popped_scope = stack.pop()
-            # print("popped " + popped_scope + " off of the stack.")
         
 
     # Return the Symbol Table created
@@ -82,8 +81,6 @@ class MyListener(LittleListener):
                 
                 print("Symbol table " + scope)
                 if values:
-                    # print(values)
-                    # for var_name, my_tuple in values:
                     for var_name in values:
                         if values[var_name][0] == "STRING":
                             print("name " + var_name + " type " + values[var_name][0] + " value " + values[var_name][1])
@@ -99,7 +96,6 @@ class MyListener(LittleListener):
         
     # Scope Declaration Functions
     def enterProg(self, ctx:LittleParser.ProgContext):
-        # print("entered program with MyParser!")
         self.enterScope("GLOBAL")
 
     # Exit a parse tree produced by LittleParser#prog.
@@ -146,14 +142,10 @@ class MyListener(LittleListener):
     def exitWhile_stmt(self, ctx:LittleParser.While_stmtContext):
         self.exitScope()
     
-    
      # Enter a parse tree produced by LittleParser#var_decl.
     def enterVar_decl(self, ctx:LittleParser.Var_declContext):
         v_type = ctx.getChild(0).getText()
-        # print("v_type = " + v_type)
         name_list = ctx.getChild(1).getText().split(',')
-        # print("Top of the stack: " + stack.peek())
-        # scope = filter(stack.peek(), name_list)
         scope = stack.peek()
         for n in name_list:
             if n in symbolTable[scope]:
@@ -165,6 +157,7 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#var_decl.
     def exitVar_decl(self, ctx:LittleParser.Var_declContext):
         pass
+
     # Enter a parse tree produced by LittleParser#string_decl.
     def enterString_decl(self, ctx:LittleParser.String_declContext):
         v_type = ctx.getChild(0).getText()
@@ -191,11 +184,16 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#param_decl.
     def exitParam_decl(self, ctx:LittleParser.Param_declContext):
         pass
-    
+
+
+
+    ############ START OF AST TREE WALKING ##########################    
     # Enter a parse tree produced by LittleParser#addop.
     def enterAddop(self, ctx:LittleParser.AddopContext):
         node = ASTNode(node_enum(1).name, ctx.getChild(0).getText())
         ast_stack.push(node)
+        print("pushed add_op node")
+        node.pprint()
         # print("enter addop")
         # print(ctx.getText())
         
@@ -206,47 +204,78 @@ class MyListener(LittleListener):
     
     # Enter a parse tree produced by LittleParser#expr_prefix.
     def enterExpr_prefix(self, ctx:LittleParser.Expr_prefixContext):
-        # pass
-        # print("enter expression prefix")
-        if ctx.getChildCount == 0:
-            node = ASTNode(node_enum(0).name, "")
-            ast_stack.push(node)
+        print("enter expression prefix")
         
-            
+        # If the expr_prefix has no children(is NULL) add a Null node to the stack
+        if ctx.getChildCount() == 0:
+            node = ASTNode(node_enum(0).name, "") #NullNode
+            ast_stack.push(node)
+            print("pushed exp_prefix ")
+            node.pprint()
+
     # Exit a parse tree produced by LittleParser#expr_prefix.
     def exitExpr_prefix(self, ctx:LittleParser.Expr_prefixContext):
-        # if not ast_stack.isEmpty():
-        while ast_stack.size() > 0:
-            node = ast_stack.pop()
-            print("Popped " + "type " + node.node_type + "value " + node.value)
-            # addop_node = ast_stack.pop()
-            # factor_node = ast_stack.pop()
-            # prefix_node = ast_stack.pop()
+        print("exit expression prefix start")
+        
+        addop_node = ast_stack.pop()
+        print("Popping addop")
+        addop_node.pprint()
+        
+        factor_node = ast_stack.pop()
+        print("Popping factor")
+        factor_node.pprint()
+        
+        prefix_node = ast_stack.pop()
+        print("Popping prefix")
+        prefix_node.pprint()
+        
+        if prefix_node.node_type == node_enum.NULL:
+            addop_node.leftChild = factor_node
+            print("Adding left child")
+            addop_node.leftChild.pprint()
+        
+        else:
+            prefix_node.rightChild = factor_node
+            print("Adding right child")
+            prefix_node.rightChild.pprint()
             
-            # if prefix_node.node_type is node_enum.NULL:
-            #     addop_node.leftChild = factor_node
-            
-            # else:
-            #     prefix_node.rightChild = factor_node
-            #     addop_node.leftChild = prefix_node
-            
-            # ast_stack.push(addop_node)    
+            addop_node.leftChild = prefix_node
+            print("Adding left child")
+            addop_node.leftChild.pprint()
+
+        ast_stack.push(addop_node)    
+        print("pushed add op tree")
+        addop_node.pprint()
+        print("exit expression prefix end")
+
         # pass
-        # print("exit expression prefix")
     # Unused parse tree methods
     
     # Enter a parse tree produced by LittleParser#factor.
     def enterFactor(self, ctx:LittleParser.FactorContext):
-        node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
-        ast_stack.push(node)
+        print("enter factor")
+        # node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
+        # ast_stack.push(node)
+        # print("pushed factor")
+        # node.pprint()
+        pass
         
-        # print("enter factor")
-        # print(ctx.getText())
-
     # Exit a parse tree produced by LittleParser#factor.
     def exitFactor(self, ctx:LittleParser.FactorContext):
-        pass
-        # print("exit factor")
+        # pass
+        print("exit factor")
+        
+        # Enter a parse tree produced by LittleParser#assign_stmt.
+    def enterAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
+        # pass
+        print("enter assignment statement")
+        # print(ctx.getText())
+
+    # Exit a parse tree produced by LittleParser#assign_stmt.
+    def exitAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
+        # pass
+        print("exit assignment statement")
+        
     # Enter a parse tree produced by LittleParser#pgm_body.
     def enterPgm_body(self, ctx:LittleParser.Pgm_bodyContext):
         pass
@@ -258,14 +287,127 @@ class MyListener(LittleListener):
     # Enter a parse tree produced by LittleParser#im.
     def enterIm(self, ctx:LittleParser.ImContext):
         pass
-        # print("enter ID")
-        # print(ctx.getText())
+        # if ast_stack.isEmpty() or ctx.getChild(0).getText() != ast_stack.peek().value:
+        #     node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
+        #     ast_stack.push(node)
+        #     print("Node Pushed in IM")
+        #     node.pprint()
+        # else: 
+        #     pass
 
     # Exit a parse tree produced by LittleParser#im.
     def exitIm(self, ctx:LittleParser.ImContext):
         pass
         # print("exit ID")
+        
+    # Enter a parse tree produced by LittleParser#factor_prefix.
+    def enterFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
+        
+        # pass
+        print("enter factor prefix")
+        if ctx.getChildCount() == 0:
+            pass
+        else:
+            print(ctx.getChild(0).getText())
+            null_node = ASTNode(node_enum(0).name, "")
+            ast_stack.push(null_node)
+            print("pushed factor prefix")
+            node.pprint()
+            #print(ast_stack.peek().node_type)
 
+    # Exit a parse tree produced by LittleParser#factor_prefix.
+    def exitFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
+        # print("exit factor prefix start")
+        # mulop_node = ast_stack.pop()
+        # print("Popped mulop node")
+        # mulop_node.pprint()
+        
+        # postfix_node = ast_stack.pop()
+        # print("Popped postfix node")
+        # postfix_node.pprint()
+        
+        # fact_prefix_node = ast_stack.pop()
+        # print("Popped factor prefix node")
+        # fact_prefix_node.pprint()
+        
+        # if fact_prefix_node.node_type is node_enum.NULL:
+        #     mulop_node.leftChild = postfix_node
+        #     print("mulop_node.leftChild = postfix_node")
+        
+        # else:
+        #     fact_prefix_node.rightChild = postfix_node
+        #     mulop_node.leftChild = fact_prefix_node
+        #     print("fact_prefix_node.rightChild = postfix_node\nmulop_node.leftChild = fact_prefix_node")
+        
+        # ast_stack.push(mulop_node)    
+        # print("pushed mul op tree")
+        # mulop_node.pprint()
+        print("exit factor prefix")
+    
+    # Enter a parse tree produced by LittleParser#assign_expr.
+    def enterAssign_expr(self, ctx:LittleParser.Assign_exprContext):
+        print("enter assignment expression")
+        # create id node
+        id_node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
+        ast_stack.push(id_node)
+        print("Pushed ID node")
+        id_node.pprint()
+        # create assexp node
+        node = ASTNode(node_enum(4).name, ctx.getChild(1).getText())
+        ast_stack.push(node)
+        print("Pushed Assexp node")
+        node.pprint()
+
+    # Exit a parse tree produced by LittleParser#assign_expr.
+    def exitAssign_expr(self, ctx:LittleParser.Assign_exprContext):
+        # pop expression node as right child        
+        exp_node = ast_stack.pop()
+        print("Poppped exp node")
+        exp_node.pprint()
+        #pop assexp node
+        assexp_node = ast_stack.pop()
+        print("Popped assexp node")
+        assexp_node.pprint()
+        #pop id node as left child
+        id_node = ast_stack.pop()
+        print("Popped id node")
+        id_node.pprint()
+       
+        assexp_node.rightChild = exp_node
+        print("Assigned assex right child")
+        assexp_node.rightChild.pprint()
+        assexp_node.leftChild = id_node
+        print("Assigned assex left child")
+        assexp_node.leftChild.pprint()
+        
+        ast_stack.push(assexp_node)
+        print("exit assignment expression")
+    
+    # Enter a parse tree produced by LittleParser#expr.
+    def enterExpr(self, ctx:LittleParser.ExprContext):
+        # pass
+        print("enter expression")
+        # print(ctx.getText())
+
+    # Exit a parse tree produced by LittleParser#expr.
+    def exitExpr(self, ctx:LittleParser.ExprContext):
+        # node = ast_stack.peek()
+        # print("exiting expression " + node.node_type + " " + node.value)
+        # pass
+        print("exit expression begin")
+        
+        
+    # Enter a parse tree produced by LittleParser#postfix_expr.
+    def enterPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
+        # pass
+        print("enter postfix expression")
+    # print(ctx.getChild(0).getText())
+        # print(ctx.getText())
+
+    # Exit a parse tree produced by LittleParser#postfix_expr.
+    def exitPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
+        # pass
+        print("exit postfix expression")    
     # Enter a parse tree produced by LittleParser#decl.
     def enterDecl(self, ctx:LittleParser.DeclContext):
         pass
@@ -371,120 +513,71 @@ class MyListener(LittleListener):
     def exitBase_stmt(self, ctx:LittleParser.Base_stmtContext):
         pass
 
-    # Enter a parse tree produced by LittleParser#assign_stmt.
-    def enterAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
-        pass
-        # print("enter assignment statement")
-        # print(ctx.getText())
+    
 
-    # Exit a parse tree produced by LittleParser#assign_stmt.
-    def exitAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
-        pass
-        # print("exit assignment statement")
-
-    # Enter a parse tree produced by LittleParser#assign_expr.
-    def enterAssign_expr(self, ctx:LittleParser.Assign_exprContext):
-        pass
-        # print("enter assignment expression")
-        # for c in ctx.getChildren():
-            # print(c.getText())
-
-    # Exit a parse tree produced by LittleParser#assign_expr.
-    def exitAssign_expr(self, ctx:LittleParser.Assign_exprContext):
-        pass
-        # print("exit assignment expression")
+    
 
     # Enter a parse tree produced by LittleParser#read_stmt.
     def enterRead_stmt(self, ctx:LittleParser.Read_stmtContext):
-        pass
-        # print("enter read statement")
+        # pass
+        print("enter read statement")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#read_stmt.
     def exitRead_stmt(self, ctx:LittleParser.Read_stmtContext):
-        pass
-        # print("exit read statement")
+        # pass
+        print("exit read statement")
 
     # Enter a parse tree produced by LittleParser#write_stmt.
     def enterWrite_stmt(self, ctx:LittleParser.Write_stmtContext):
-        pass
-        # print("enter write statement")
+        # pass
+        print("enter write statement")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#write_stmt.
     def exitWrite_stmt(self, ctx:LittleParser.Write_stmtContext):
-        pass
-        # print("exit write statement")
+        # pass
+        print("exit write statement")
 
     # Enter a parse tree produced by LittleParser#return_stmt.
     def enterReturn_stmt(self, ctx:LittleParser.Return_stmtContext):
-        pass
-        # print("enter return statement")
+        # pass
+        print("enter return statement")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#return_stmt.
     def exitReturn_stmt(self, ctx:LittleParser.Return_stmtContext):
-        pass
-        # print("exit return statement")
-
-    # Enter a parse tree produced by LittleParser#expr.
-    def enterExpr(self, ctx:LittleParser.ExprContext):
-        pass
-        # print("enter expression")
-        # print(ctx.getText())
-
-    # Exit a parse tree produced by LittleParser#expr.
-    def exitExpr(self, ctx:LittleParser.ExprContext):
-        node = ast_stack.peek()
-        print("exiting expression " + node.node_type + node.value)
         # pass
-        # print("exit expression")
+        print("exit return statement")
 
+    
     
 
     
 
-    # Enter a parse tree produced by LittleParser#factor_prefix.
-    def enterFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
-        pass
-        # print("enter factor prefix")
-        # print(ctx.getText())
+    
 
-    # Exit a parse tree produced by LittleParser#factor_prefix.
-    def exitFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
-        pass
-        # print("exit factor prefix")
-
-    # Enter a parse tree produced by LittleParser#postfix_expr.
-    def enterPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
-        pass
-        # print("enter postfix expression")
-        # print(ctx.getText())
-
-    # Exit a parse tree produced by LittleParser#postfix_expr.
-    def exitPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
-        pass
-        # print("exit postfix expression")
+    
 
     # Enter a parse tree produced by LittleParser#call_expr.
     def enterCall_expr(self, ctx:LittleParser.Call_exprContext):
-        pass
+        print("enter call expression")
 
     # Exit a parse tree produced by LittleParser#call_expr.
     def exitCall_expr(self, ctx:LittleParser.Call_exprContext):
-        pass
+        print("exit call expression")
 
 
     # Enter a parse tree produced by LittleParser#expr_list.
     def enterExpr_list(self, ctx:LittleParser.Expr_listContext):
-        pass
-        # print("enter expression list")
+        # pass
+        print("enter expression list")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#expr_list.
     def exitExpr_list(self, ctx:LittleParser.Expr_listContext):
-        pass
-        # print("exit expression list")
+        # pass
+        print("exit expression list")
 
 
     # Enter a parse tree produced by LittleParser#expr_list_tail.
@@ -498,46 +591,60 @@ class MyListener(LittleListener):
 
     # Enter a parse tree produced by LittleParser#primary.
     def enterPrimary(self, ctx:LittleParser.PrimaryContext):
-        pass
-        # print("enter primary")
-        print(ctx.getText())
+        # pass
+        print("enter primary")
+
+        if ctx.getChildCount() > 1:
+            pass
+        # this is where we are stuck
+        else:
+            node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
+            ast_stack.push(node)
+            print("Node Pushed in Primary")
+            node.pprint()
+
 
     # Exit a parse tree produced by LittleParser#primary.
     def exitPrimary(self, ctx:LittleParser.PrimaryContext):
-        pass
-        # print("exit primary")
+        # pass
+        print("exit primary")
+
+
+    
+
 
     # Enter a parse tree produced by LittleParser#mulop.
     def enterMulop(self, ctx:LittleParser.MulopContext):
-        pass
-        # print("enter mulop")
+        node = ASTNode(node_enum(2).name, ctx.getChild(0).getText())
+        ast_stack.push(node)
+        print("enter mulop")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#mulop.
     def exitMulop(self, ctx:LittleParser.MulopContext):
-        pass
-        # print("exit mulop")
+        # pass
+        print("exit mulop")
 
 
     # Enter a parse tree produced by LittleParser#cond.
     def enterCond(self, ctx:LittleParser.CondContext):
-        pass
-        # print("enter conditional")
+        # pass
+        print("enter conditional")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#cond.
     def exitCond(self, ctx:LittleParser.CondContext):
-        pass
-        # print("exit conditional")
+        # pass
+        print("exit conditional")
 
 
     # Enter a parse tree produced by LittleParser#compop.
     def enterCompop(self, ctx:LittleParser.CompopContext):
-        pass
-        # print("enter compop")
+        # pass
+        print("enter compop")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#compop.
     def exitCompop(self, ctx:LittleParser.CompopContext):
-        pass
-        # print("exit compop")
+        # pass
+        print("exit compop")
