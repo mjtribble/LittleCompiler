@@ -1,3 +1,4 @@
+
 # Generated from /home/ubuntu/Little.g4 by ANTLR 4.7.1
 from antlr4 import *
 from LittleListener import LittleListener
@@ -205,47 +206,54 @@ class MyListener(LittleListener):
     # Enter a parse tree produced by LittleParser#expr_prefix.
     def enterExpr_prefix(self, ctx:LittleParser.Expr_prefixContext):
         print("enter expression prefix")
-        
         # If the expr_prefix has no children(is NULL) add a Null node to the stack
-        if ctx.getChildCount() == 0:
+        if ctx.getChildCount() != 0 and ctx.getChild(0).getChildCount()==0:
             node = ASTNode(node_enum(0).name, "") #NullNode
             ast_stack.push(node)
-            print("pushed exp_prefix ")
-            node.pprint()
+            print("pushed exp_prefix Null")
+        elif ctx.getChildCount() == 0:
+            node = ASTNode(node_enum(6).name, "" ) #Placeholder node
+            ast_stack.push(node)
+            print("pushed exp_prefix Placeholder")
 
     # Exit a parse tree produced by LittleParser#expr_prefix.
     def exitExpr_prefix(self, ctx:LittleParser.Expr_prefixContext):
-        print("exit expression prefix start")
         
-        addop_node = ast_stack.pop()
-        print("Popping addop")
-        addop_node.pprint()
-        
-        factor_node = ast_stack.pop()
-        print("Popping factor")
-        factor_node.pprint()
-        
-        prefix_node = ast_stack.pop()
-        print("Popping prefix")
-        prefix_node.pprint()
-        
-        if prefix_node.node_type == node_enum.NULL:
-            addop_node.leftChild = factor_node
-            print("Adding left child")
-            addop_node.leftChild.pprint()
-        
+        if ast_stack.peek().node_type == node_enum(6).name: # if a placeholder node
+            ast_stack.pop()
         else:
-            prefix_node.rightChild = factor_node
-            print("Adding right child")
-            prefix_node.rightChild.pprint()
+        
+            print("exit expression prefix start")
             
-            addop_node.leftChild = prefix_node
-            print("Adding left child")
-            addop_node.leftChild.pprint()
-
-        ast_stack.push(addop_node)    
-        print("pushed add op tree")
-        addop_node.pprint()
+            addop_node = ast_stack.pop()
+            print("Popping addop")
+            addop_node.pprint()
+            
+            factor_node = ast_stack.pop()
+            print("Popping factor")
+            factor_node.pprint()
+            
+            prefix_node = ast_stack.pop()
+            print("Popping prefix")
+            prefix_node.pprint()
+            
+            if prefix_node.node_type == node_enum(0).name:
+                addop_node.leftChild = factor_node
+                print(" addop_node.leftChild = factor_node")
+                addop_node.leftChild.pprint()
+            
+            else:
+                prefix_node.rightChild = factor_node
+                print("prefix_node.rightChild = factor_node")
+                prefix_node.rightChild.pprint()
+                
+                addop_node.leftChild = prefix_node
+                print("addop_node.leftChild = prefix_node")
+                addop_node.leftChild.pprint()
+    
+            ast_stack.push(addop_node)    
+            print("pushed add op tree")
+            addop_node.pprint()
         print("exit expression prefix end")
 
         # pass
@@ -254,16 +262,35 @@ class MyListener(LittleListener):
     # Enter a parse tree produced by LittleParser#factor.
     def enterFactor(self, ctx:LittleParser.FactorContext):
         print("enter factor")
-        # node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
-        # ast_stack.push(node)
-        # print("pushed factor")
-        # node.pprint()
-        pass
+        if ctx.getChild(0).getChildCount() == 0:
+            ast_stack.push(ASTNode(node_enum(0).name, "")) #push
+            print("Null node pushed ")
+        
         
     # Exit a parse tree produced by LittleParser#factor.
     def exitFactor(self, ctx:LittleParser.FactorContext):
         # pass
-        print("exit factor")
+        print("exit factor start")
+        postfix_node = ast_stack.pop()
+        print("pop postfix_node")
+        postfix_node.pprint()
+        
+        factor_prefix_node = ast_stack.pop()
+        if factor_prefix_node.node_type == node_enum(0).name:
+            ast_stack.push(postfix_node)
+            print("pushed postfix_node back onto stack")
+            
+        else:
+            print("pop factor_prefix_node")
+            factor_prefix_node.pprint()
+            
+            factor_prefix_node.rightChild = postfix_node
+            print("factor_prefix_node.rightChild = postfix_node")
+            
+            ast_stack.push(factor_prefix_node)
+            print("push factor_prefix node")
+            factor_prefix_node.pprint()
+        # ast_stack.pretty()
         
         # Enter a parse tree produced by LittleParser#assign_stmt.
     def enterAssign_stmt(self, ctx:LittleParser.Assign_stmtContext):
@@ -303,45 +330,47 @@ class MyListener(LittleListener):
     # Enter a parse tree produced by LittleParser#factor_prefix.
     def enterFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
         
-        # pass
         print("enter factor prefix")
-        if ctx.getChildCount() == 0:
-            pass
-        else:
-            print(ctx.getChild(0).getText())
-            null_node = ASTNode(node_enum(0).name, "")
-            ast_stack.push(null_node)
-            print("pushed factor prefix")
-            node.pprint()
-            #print(ast_stack.peek().node_type)
+        # If the expr_prefix has no children(is NULL) add a Null node to the stack
+        if ctx.getChildCount() != 0 and ctx.getChild(0).getChildCount()==0:
+            node = ASTNode(node_enum(0).name, "") #NullNode
+            ast_stack.push(node)
+            print("pushed factor_prefix Null")
+        elif ctx.getChildCount() == 0:
+            node = ASTNode(node_enum(6).name, "" ) #Placeholder node
+            ast_stack.push(node)
+            print("pushed facor_prefix Placeholder")
 
     # Exit a parse tree produced by LittleParser#factor_prefix.
     def exitFactor_prefix(self, ctx:LittleParser.Factor_prefixContext):
-        # print("exit factor prefix start")
-        # mulop_node = ast_stack.pop()
-        # print("Popped mulop node")
-        # mulop_node.pprint()
-        
-        # postfix_node = ast_stack.pop()
-        # print("Popped postfix node")
-        # postfix_node.pprint()
-        
-        # fact_prefix_node = ast_stack.pop()
-        # print("Popped factor prefix node")
-        # fact_prefix_node.pprint()
-        
-        # if fact_prefix_node.node_type is node_enum.NULL:
-        #     mulop_node.leftChild = postfix_node
-        #     print("mulop_node.leftChild = postfix_node")
-        
-        # else:
-        #     fact_prefix_node.rightChild = postfix_node
-        #     mulop_node.leftChild = fact_prefix_node
-        #     print("fact_prefix_node.rightChild = postfix_node\nmulop_node.leftChild = fact_prefix_node")
-        
-        # ast_stack.push(mulop_node)    
-        # print("pushed mul op tree")
-        # mulop_node.pprint()
+        print("exit factor prefix start")
+        if ast_stack.peek().node_type == node_enum(6).name: # if a placeholder node
+            ast_stack.pop()
+        else:
+            mulop_node = ast_stack.pop()
+            print("Popped mulop node")
+            mulop_node.pprint()
+            
+            postfix_node = ast_stack.pop()
+            print("Popped postfix node")
+            postfix_node.pprint()
+            
+            fact_prefix_node = ast_stack.pop()
+            print("Popped factor prefix node")
+            fact_prefix_node.pprint()
+            
+            if fact_prefix_node.node_type == node_enum(0).name:
+                mulop_node.leftChild = postfix_node
+                print("mulop_node.leftChild = postfix_node")
+            
+            else:
+                fact_prefix_node.rightChild = postfix_node
+                mulop_node.leftChild = fact_prefix_node
+                print("fact_prefix_node.rightChild = postfix_node\nmulop_node.leftChild = fact_prefix_node")
+            
+            ast_stack.push(mulop_node)    
+            print("pushed mul op tree")
+            mulop_node.pprint()
         print("exit factor prefix")
     
     # Enter a parse tree produced by LittleParser#assign_expr.
@@ -360,6 +389,38 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#assign_expr.
     def exitAssign_expr(self, ctx:LittleParser.Assign_exprContext):
+        print("exit assignment expression start")
+        #new logic to check node types before assigning them as we pop
+        # while not ast_stack.isEmpty:
+        #     node = ast_stack.pop()
+        #     if node.node_type == node_enum(3).name:
+        #         assexp_node = node
+        #         print("Popped assexp node")
+        #     elif node.rightChild == None and node.leftChild == None:
+        #         id_node = node
+        #         print("Popped id node")
+        #     elif node.node_type == node_enum(0).name:
+        #         print("Popped null node")
+        #     else:
+        #         exp_node = node
+        #         print("Poppped exp node")
+            
+        #   #pop assexp node
+        # assexp_node = ast_stack.pop()
+        # print("Popped assexp node")
+        # assexp_node.pprint()
+        # #pop id node as left child
+        # id_node = ast_stack.pop()
+        # print("Popped id node")
+        # id_node.pprint()
+        
+        # assexp_node.leftChild = id_node
+        # print("assexp_node.leftChild = id_node")
+        # assexp_node.leftChild.pprint()
+        
+        # ast_stack.push(assexp_node)
+        # print("push assexp_node")
+        # assexp_node.pprint()
         # pop expression node as right child        
         exp_node = ast_stack.pop()
         print("Poppped exp node")
@@ -372,21 +433,29 @@ class MyListener(LittleListener):
         id_node = ast_stack.pop()
         print("Popped id node")
         id_node.pprint()
-       
+   
         assexp_node.rightChild = exp_node
-        print("Assigned assex right child")
+        print("assexp_node.rightChild = exp_node")
         assexp_node.rightChild.pprint()
         assexp_node.leftChild = id_node
-        print("Assigned assex left child")
+        print("assexp_node.leftChild = id_node")
         assexp_node.leftChild.pprint()
         
         ast_stack.push(assexp_node)
+        print("push assexp_node")
+        assexp_node.pprint()
+        
+        # ast_stack.pretty()
         print("exit assignment expression")
     
     # Enter a parse tree produced by LittleParser#expr.
     def enterExpr(self, ctx:LittleParser.ExprContext):
         # pass
         print("enter expression")
+        if ctx.getChild(0).getChildCount() == 0:
+            ast_stack.push(ASTNode(node_enum(0).name, "")) #push
+            print("Null node pushed ")
+        
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#expr.
@@ -394,8 +463,27 @@ class MyListener(LittleListener):
         # node = ast_stack.peek()
         # print("exiting expression " + node.node_type + " " + node.value)
         # pass
-        print("exit expression begin")
+        print("start exit expression start")
         
+        factor_node = ast_stack.pop()
+        print("pop factor_node")
+        factor_node.pprint()
+        
+        expr_prefix_node = ast_stack.pop()
+        if expr_prefix_node.node_type == node_enum(0).name:
+            ast_stack.push(factor_node)
+            print("pushed factor node back onto stack")
+            
+        else:
+            print("pop exp_pre_node")
+            expr_prefix_node.pprint()
+            
+            expr_prefix_node.rightChild = factor_node
+            print("expr_prefix_node.rightChild = factor_node")
+            
+            ast_stack.push(expr_prefix_node)
+            print("push expr_prefix node")
+            expr_prefix_node.pprint()
         
     # Enter a parse tree produced by LittleParser#postfix_expr.
     def enterPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):

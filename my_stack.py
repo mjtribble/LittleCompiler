@@ -12,7 +12,26 @@ class MyStack:
          return self.items.pop()
 
      def peek(self):
-         return self.items[len(self.items)-1]
+         if self:
+            return self.items[len(self.items)-1]
+         else:
+            print("Stack is empty")
 
      def size(self):
          return len(self.items)
+
+     def pretty(self):
+         for item in self.items:
+             print("Parent: " )
+             item.pprint()
+             print("Left Child")
+             if item.leftChild != None:
+                item.leftChild.pprint()
+             else:
+                 print("No Left Child")
+             print("Right Child ")
+             if item.rightChild != None:
+                item.rightChild.pprint()
+             else:
+                 print("No Right Child")
+         print("End of Current Stack")

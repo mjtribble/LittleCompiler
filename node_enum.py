@@ -5,6 +5,8 @@ class node_enum(Enum):
     ADDEXP = 1
     MULEXP = 2
     VARREF = 3
-    STMTLST = 4
+    ASSEXP = 4
+    STMTLST = 5
+    PLACEHOLDER = 6
     
     
