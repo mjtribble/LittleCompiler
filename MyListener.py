@@ -4,7 +4,7 @@ from antlr4 import *
 from LittleListener import LittleListener
 from MyStack import MyStack
 import collections
-from ASTNode import ASTNode, node_enum
+from ASTNode import ASTNode, node_enum, AssignmentStmtNode
 
 
 if __name__ is not None and "." in __name__:
@@ -26,9 +26,8 @@ class MyListener(LittleListener):
     global ast_stack
     ast_stack = MyStack()
 
-    global stmt_list_node
-    stmt_list_node = ASTNode(node_enum(5).name, "AssList")
-    # stmt_list_node.stmt_list = [ASTNode(node_enum(6).name, "InitialNode")]
+    global statements_node
+    statements_node = AssignmentStmtNode()
 
     # Global block variable to count Block scopes
     block = 0
@@ -95,6 +94,9 @@ class MyListener(LittleListener):
         self.block += 1
         name = "BLOCK " + str(self.block)
         return name
+
+    def getStatmentListNode(self):
+        return statements_node
 
     # Scope Declaration Functions
     def enterProg(self, ctx:LittleParser.ProgContext):
@@ -359,61 +361,53 @@ class MyListener(LittleListener):
     # Enter a parse tree produced by LittleParser#assign_expr.
     def enterAssign_expr(self, ctx:LittleParser.Assign_exprContext):
         print("enter assignment expression")
+
         # create id node
         id_node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
         ast_stack.push(id_node)
         print("Pushed ID node")
         id_node.pprint()
+
         # create assexp node
         node = ASTNode(node_enum(4).name, ctx.getChild(1).getText())
         ast_stack.push(node)
         print("Pushed Assexp node")
         node.pprint()
 
+    # Instead of pushing onto the AST_stack here,
+    # we will add the ass_exp tree to the statement_list node's list of assignments statments.
     # Exit a parse tree produced by LittleParser#assign_expr.
     def exitAssign_expr(self, ctx:LittleParser.Assign_exprContext):
         print("exit assignment expression start")
 
-        #   #pop assexp node
-        # assexp_node = ast_stack.pop()
-        # print("Popped assexp node")
-        # assexp_node.pprint()
-        # #pop id node as left child
-        # id_node = ast_stack.pop()
-        # print("Popped id node")
-        # id_node.pprint()
-
-        # assexp_node.leftChild = id_node
-        # print("assexp_node.leftChild = id_node")
-        # assexp_node.leftChild.pprint()
-
-        # ast_stack.push(assexp_node)
-        # print("push assexp_node")
-        # assexp_node.pprint()
-        # pop expression node as right child
         exp_node = ast_stack.pop()
         print("Poppped exp node")
         exp_node.pprint()
+
         #pop assexp node
         assexp_node = ast_stack.pop()
         print("Popped assexp node")
         assexp_node.pprint()
+
         #pop id node as left child
         id_node = ast_stack.pop()
         print("Popped id node")
+
         id_node.pprint()
 
         assexp_node.rightChild = exp_node
         print("assexp_node.rightChild = exp_node")
         assexp_node.rightChild.pprint()
+
         assexp_node.leftChild = id_node
         print("assexp_node.leftChild = id_node")
         assexp_node.leftChild.pprint()
 
-        ast_stack.push(assexp_node)
-        print("push assexp_node and add to Ass List")
-        stmt_list_node.stmt_list.append(assexp_node)
+        statements_node.add(id_node.value, assexp_node)
+        print("added " + id_node.value + "'s expression tree to the statement_node")
         assexp_node.pprint()
+
+        statements_node.assPrint()
 
         # ast_stack.pretty()
         print("exit assignment expression")
@@ -459,8 +453,6 @@ class MyListener(LittleListener):
     def enterPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
         # pass
         print("enter postfix expression")
-    # print(ctx.getChild(0).getText())
-        # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#postfix_expr.
     def exitPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
@@ -520,17 +512,26 @@ class MyListener(LittleListener):
 
     # Enter a parse tree produced by LittleParser#primary.
     def enterPrimary(self, ctx:LittleParser.PrimaryContext):
-        # pass
         print("enter primary")
 
         if ctx.getChildCount() > 1:
             pass
-        # this is where we are stuck
         else:
             node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
-            ast_stack.push(node)
-            print("Node Pushed in Primary")
-            node.pprint()
+
+            # check if there is an expression assignment for the variable
+            varexpr_node = statements_node.findVariable(node.value)
+            print("VarExpr return = ")
+            print(varexpr_node)
+
+            if varexpr_node != None:  # push the ASSEXP node instead of variable
+                ast_stack.push(varexpr_node)
+                print("Pushed Primary's Expression node")
+                varexpr_node.pprint()
+            else:           # push the variable
+                ast_stack.push(node)
+                print("Node Pushed in Primary")
+                node.pprint()
 
     # Exit a parse tree produced by LittleParser#primary.
     def exitPrimary(self, ctx:LittleParser.PrimaryContext):
