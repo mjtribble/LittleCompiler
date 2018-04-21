@@ -17,14 +17,15 @@ class node_enum(Enum):
 # This will then be used by the IR generator to connect variable values to the end of a tree
 class ASTNode:
 
-    def __init__(self, node_type, value):
+    def __init__(self, node_type, value, val_type = ""):
         self.node_type = node_type
         self.value = value
+        self.val_type = val_type
         self.leftChild = None
         self.rightChild = None
 
     def pprint(self):
-        print('Node: TYPE: %s VALUE: %s' % (self.node_type, self.value))
+        print('Node: TYPE: %s VALUE: %s %s' % (self.node_type, self.val_type, self.value))
 
     def setRightChild(self, child):
         self.rightChild = child

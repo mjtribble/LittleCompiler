@@ -41,6 +41,8 @@ class MyListener(LittleListener):
     global errorNames
     errorNames = []
 
+
+
     # error method to set flag to true when an error is found
     def error(self):
         global flag
@@ -66,6 +68,8 @@ class MyListener(LittleListener):
         else:
             popped_scope = stack.pop()
 
+    def getCurrentScope(self):
+        return stack.peek()
 
     # Return the Symbol Table created
     def getTable(self):
@@ -194,6 +198,7 @@ class MyListener(LittleListener):
     ############ START OF AST TREE WALKING ##########################
     # Enter a parse tree produced by LittleParser#addop.
     def enterAddop(self, ctx:LittleParser.AddopContext):
+
         node = ASTNode(node_enum(1).name, ctx.getChild(0).getText())
         ast_stack.push(node)
         print("pushed add_op node")
@@ -362,14 +367,25 @@ class MyListener(LittleListener):
     def enterAssign_expr(self, ctx:LittleParser.Assign_exprContext):
         print("enter assignment expression")
 
-        # create id node
-        id_node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
+        var1 = ctx.getChild(0).getText()
+        var2 = ctx.getChild(1).getText()
+        var_type = None
+        currentScope = self.getCurrentScope()
+
+        # get the type for id_node, first check if its in the current scope else get it from global scope
+        if var1 in symbolTable[currentScope]:
+            var_type = symbolTable[currentScope][var1][0]
+        elif var1 in symbolTable['GLOBAL']:
+            var_type = symbolTable['GLOBAL'][var1][0]
+
+        # create varref node
+        id_node = ASTNode(node_enum(3).name, var1, var_type)
         ast_stack.push(id_node)
         print("Pushed ID node")
         id_node.pprint()
 
         # create assexp node
-        node = ASTNode(node_enum(4).name, ctx.getChild(1).getText())
+        node = ASTNode(node_enum(4).name, var2)
         ast_stack.push(node)
         print("Pushed Assexp node")
         node.pprint()
@@ -467,7 +483,17 @@ class MyListener(LittleListener):
         while i < ctx.getChild(2).getChildCount():
             var = ctx.getChild(2).getChild(i).getText()
             var = var.strip(",")
-            node = ASTNode(node_enum(7).name, var)
+            print("VAR = " + var)
+            var_type = "None"
+            currentScope = self.getCurrentScope()
+
+            # get the type for node, first check if its in the current scope else get it from global scope
+            if var in symbolTable[currentScope]:
+                var_type = symbolTable[currentScope][var][0]
+            elif var in symbolTable['GLOBAL']:
+                var_type = symbolTable['GLOBAL'][var][0]
+
+            node = ASTNode(node_enum(7).name, var, var_type)
             statements_node.add(node.value, node)
             node.pprint()
             i+=1
@@ -515,7 +541,18 @@ class MyListener(LittleListener):
         if ctx.getChildCount() > 1:
             pass
         else:
-            node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
+
+            var = ctx.getChild(0).getText()
+            var_type = "None"
+            currentScope = self.getCurrentScope()
+
+            # get the type for id_node, first check if its in the current scope else get it from global scope
+            if var in symbolTable[currentScope]:
+                var_type = symbolTable[currentScope][var][0]
+            elif var in symbolTable['GLOBAL']:
+                var_type = symbolTable['GLOBAL'][var][0]
+
+            node = ASTNode(node_enum(3).name, var, var_type)
 
             # check if there is an expression assignment for the variable
             varexpr_node = statements_node.findVariable(node.value)
@@ -725,4 +762,3 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#expr_list.
     def exitExpr_list(self, ctx:LittleParser.Expr_listContext):
         pass
-    
