@@ -461,7 +461,6 @@ class MyListener(LittleListener):
 
     # Enter a parse tree produced by LittleParser#read_stmt.
     def enterRead_stmt(self, ctx:LittleParser.Read_stmtContext):
-        # pass
         print("enter read statement")
         print("Read Children: " + str(ctx.getChild(2).getChildCount()))
         i = 0
@@ -469,8 +468,7 @@ class MyListener(LittleListener):
             var = ctx.getChild(2).getChild(i).getText()
             var = var.strip(",")
             node = ASTNode(node_enum(7).name, var)
-            # ast_stack.push(node)
-            # print("pushed varref node in read")
+            statements_node.add(node.value, node)
             node.pprint()
             i+=1
 
@@ -521,8 +519,6 @@ class MyListener(LittleListener):
 
             # check if there is an expression assignment for the variable
             varexpr_node = statements_node.findVariable(node.value)
-            print("VarExpr return = ")
-            print(varexpr_node)
 
             if varexpr_node != None:  # push the ASSEXP node instead of variable
                 ast_stack.push(varexpr_node)
@@ -662,13 +658,6 @@ class MyListener(LittleListener):
     # Enter a parse tree produced by LittleParser#im.
     def enterIm(self, ctx:LittleParser.ImContext):
         pass
-        # if ast_stack.isEmpty() or ctx.getChild(0).getText() != ast_stack.peek().value:
-        #     node = ASTNode(node_enum(3).name, ctx.getChild(0).getText())
-        #     ast_stack.push(node)
-        #     print("Node Pushed in IM")
-        #     node.pprint()
-        # else:
-        #     pass
 
     # Exit a parse tree produced by LittleParser#im.
     def exitIm(self, ctx:LittleParser.ImContext):

@@ -49,6 +49,7 @@ class AssignmentStmtNode:
     # variable is the left hand side of the statment,
     # will be used to find a variables that may need in larger expressions.
     def add(self, var, node):
+        print("Added " + var + " to the statement list")
         self.node_list.append((var, node))
 
     def assPrint(self):

@@ -15,11 +15,16 @@ def main(argv):
     # listener = LittleListener()
     listener = MyListener()
     walker = ParseTreeWalker()
-    walker.walk(listener, tree)
-    # print(listener.toString())
-    # print(listener.getTable())
-    # listener.printTable()
 
+    # creates the symbol table, and the ast tree
+    walker.walk(listener, tree)
+
+    # get a node containing a list of assignment statements
+    ast_asslist = listener.getStatmentListNode()
+    symbol_table = listener.getTable()
+
+    # listener.printTable()
+    ir = IRGenerate(ast_asslist, symbol_table )
 
 
 if __name__ == '__main__':

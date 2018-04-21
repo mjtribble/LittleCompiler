@@ -13,12 +13,3 @@ class IRGenerate:
 
     def postOrderTraversal(ast_stack):
         pass
-
-    #this is where the ascii logic should live
-    #the node will be a VARREF and we need to see if its value is an int or a string
-    def getRecordType(node):
-        pass
-
-    # this function will use postorder traversal to replace leaf node variables with ASSEXP nodes or READ nodes.
-    def completeTree(self, node):
-        pass
