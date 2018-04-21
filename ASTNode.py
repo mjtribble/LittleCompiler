@@ -33,7 +33,7 @@ class ASTNode:
 
     # def getLeftChild(self):
     #     return self.leftChild
-
+        from enum import Enum
 
 class node_enum(Enum):
     NULL = 0
@@ -45,3 +45,7 @@ class node_enum(Enum):
     PLACEHOLDER = 6
     READ = 7
     WRITE = 8
+
+
+
+        

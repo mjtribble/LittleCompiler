@@ -2,3 +2,4 @@
 class CodeObject:
 
     def __init__():
+        pass

@@ -2,10 +2,9 @@
 # Generated from /home/ubuntu/Little.g4 by ANTLR 4.7.1
 from antlr4 import *
 from LittleListener import LittleListener
-from my_stack import MyStack
+from MyStack import MyStack
 import collections
-from ASTNode import ASTNode
-from node_enum import node_enum
+from ASTNode import ASTNode, node_enum
 
 
 if __name__ is not None and "." in __name__:
@@ -347,7 +346,6 @@ class MyListener(LittleListener):
                 mulop_node.leftChild = postfix_node
                 print("mulop_node.leftChild = postfix_node")
 
-<<<<<<< HEAD
             else:
                 fact_prefix_node.rightChild = postfix_node
                 mulop_node.leftChild = fact_prefix_node
@@ -468,7 +466,6 @@ class MyListener(LittleListener):
     def exitPostfix_expr(self, ctx:LittleParser.Postfix_exprContext):
         # pass
         print("exit postfix expression")
-
 
     # Enter a parse tree produced by LittleParser#read_stmt.
     def enterRead_stmt(self, ctx:LittleParser.Read_stmtContext):
@@ -738,3 +735,4 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#expr_list.
     def exitExpr_list(self, ctx:LittleParser.Expr_listContext):
         pass
+    
