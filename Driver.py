@@ -3,6 +3,8 @@ from antlr4 import *
 from LittleLexer import LittleLexer
 from LittleParser import LittleParser
 from MyListener import MyListener
+# from LittleListener import LittleListener
+from IRGenerate import IRGenerate
 
 def main(argv):
     input = FileStream(argv[1])
@@ -10,10 +12,14 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = LittleParser(stream)
     tree = parser.prog()
+    # listener = LittleListener()
     listener = MyListener()
     walker = ParseTreeWalker()
     walker.walk(listener, tree)
-    print(listener.getTable())
+    # print(listener.toString())
+    # print(listener.getTable())
+    # listener.printTable()
+
 
 
 if __name__ == '__main__':
