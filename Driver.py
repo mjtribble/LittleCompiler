@@ -23,13 +23,12 @@ def main(argv):
     ast_asslist = listener.getStatmentListNode()
     symbol_table = listener.getTable()
     ast_stack = listener.getStack()
-    print("Traversing Stack in Driver: ")
-    ast_stack.pretty()
+    # print("Traversing Stack in Driver: ")
+    # ast_stack.pretty()
     
     # listener.printTable()
-    ir = IRGenerate(ast_asslist, symbol_table, ast_stack)    
-    ir.postorderTraversal()
- 
+    ir = IRGenerate(ast_asslist, symbol_table)    
+
 if __name__ == '__main__':
     main(sys.argv)
     
