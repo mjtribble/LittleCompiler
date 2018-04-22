@@ -15,23 +15,27 @@ def main(argv):
     # listener = LittleListener()
     listener = MyListener()
     walker = ParseTreeWalker()
-
+    
     # creates the symbol table, and the ast tree
     walker.walk(listener, tree)
-
+    
     # get a node containing a list of assignment statements
     ast_asslist = listener.getStatmentListNode()
     symbol_table = listener.getTable()
-
+    ast_stack = listener.getStack()
+    print("Traversing Stack in Driver: ")
+    ast_stack.pretty()
+    
     # listener.printTable()
-    ir = IRGenerate(ast_asslist, symbol_table )
-
-
+    ir = IRGenerate(ast_asslist, symbol_table, ast_stack)    
+    ir.postorderTraversal()
+ 
 if __name__ == '__main__':
     main(sys.argv)
-
+    
 
 
     #for token in stream.tokens:
     #    print("Token Type:", lexer.symbolicNames[token.type])
     #    print("Value:", token.text)
+
