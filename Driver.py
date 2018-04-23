@@ -21,14 +21,27 @@ def main(argv):
     
     # get a node containing a list of assignment statements
     ast_asslist = listener.getStatmentListNode()
+    # print("Printing AssList")
+    # for item in ast_asslist.node_list:
+    #     print(item[1].value)
     symbol_table = listener.getTable()
     ast_stack = listener.getStack()
+    
+    
     # print("Traversing Stack in Driver: ")
     # ast_stack.pretty()
     
     # listener.printTable()
-    ir = IRGenerate(ast_asslist, symbol_table)    
-
+    ir = IRGenerate(ast_asslist, symbol_table)
+    # print("Printing Code Objects from Driver")
+    # objects = ir.getCodeObjects()
+    # for obj in objects:
+    #     obj.printCO()
+    print(";Printing Tiny Code from Driver")
+    for tiny in ir.getTinyList():
+        print(tiny)
+    print("sys halt")
+    
 if __name__ == '__main__':
     main(sys.argv)
     
