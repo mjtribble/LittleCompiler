@@ -40,7 +40,6 @@ class MyListener(LittleListener):
     errorNames = []
 
 
-
     # error method to set flag to true when an error is found
     def error(self):
         global flag
@@ -138,7 +137,7 @@ class MyListener(LittleListener):
     # Exit a parse tree produced by LittleParser#if_stmt.
     def exitIf_stmt(self, ctx:LittleParser.If_stmtContext):
         self.exitScope()
-
+        print(";Exit IF start")
         # and IF node will have a list of two or three nodes. [COMPOP, STMTLIST, STMTLIST]
         # or if there is no elsepart just [COMPOP, STMTLIST]
         node = ASTNode(node_enum(13).name, [], "")
@@ -163,7 +162,7 @@ class MyListener(LittleListener):
         node.value.append(comp_node)
         node.value.append(sl_node)
 
-        if else_node.node_type != node_enum.PLACEHOLDER.name:
+        if else_node.node_type != node_enum(6).name:
             node.value.append(else_node)
 
         ast_stack.push(node)
@@ -195,13 +194,21 @@ class MyListener(LittleListener):
     def exitElse_part(self, ctx:LittleParser.Else_partContext):
         print(';Exiting ElsePart Start')
         self.exitScope()
+        if ast_stack.peek().node_type == node_enum(6).name:
+            pass
+        else:
+            stmtList = ast_stack.pop()
+            print("Popped stmtlist")
+            print(stmtList)
+            label = ast_stack.pop()
+            print("Popped label")
+            print(label)
 
-        stmtList = ast_stack.pop()
-        label = ast_stack.pop()
+            node = ASTNode(node_enum(15).name, [stmtList], label)
 
-        node = ASTNode(node_enum(15).name, [stmtList], label)
-        print(";Pushed ELSE node")
-        print(node)
+            print(";Pushed ELSE node")
+            ast_stack.push(node)
+            print(node)
         print(';Exited ElsePart ')
 
 
@@ -585,17 +592,17 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#cond.
     def exitCond(self, ctx:LittleParser.CondContext):
-        print(";exitCond start")
+        # print(";exitCond start")
 
         exp2 = ast_stack.pop()
-        print("pop exp2")
-        print(exp2)
+        # print("pop exp2")
+        # print(exp2)
         compop = ast_stack.pop()
-        print("pop compop")
-        print(compop)
+        # print("pop compop")
+        # print(compop)
         exp1 = ast_stack.pop()
-        print("pop exp1")
-        print(exp1)
+        # print("pop exp1")
+        # print(exp1)
 
         compop.rightChild = exp2
         compop.leftChild = exp1
@@ -603,10 +610,10 @@ class MyListener(LittleListener):
         # print("compop.leftChild = exp1")
 
         ast_stack.push(compop)
-        print("Compop pushed")
-        print(compop)
+        # print("Compop pushed")
+        # print(compop)
         # pass
-        print("exit conditional")
+        # print("exit conditional")
 
 
     # Enter a parse tree produced by LittleParser#compop.
@@ -660,7 +667,7 @@ class MyListener(LittleListener):
             print("Popped Statement Node")
             print(stmt)
 
-            sl.value.append(stmt)
+            sl.value.insert(0, stmt)
 
             ast_stack.push(sl)
             print(";Added stmt to Statement List and PUSHED")
