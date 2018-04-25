@@ -377,6 +377,8 @@ class MyListener(LittleListener):
     def enterRead_stmt(self, ctx:LittleParser.Read_stmtContext):
         print(";Enter Read Statement")
         i = 0
+        # A read node's values will be a list of tuples [(variable, type), (var, type)]
+        node = ASTNode(node_enum(7).name, [], "")
         while i < ctx.getChild(2).getChildCount():
             var = ctx.getChild(2).getChild(i).getText()
             var = var.strip(",")
@@ -389,9 +391,14 @@ class MyListener(LittleListener):
             elif var in symbolTable['GLOBAL']:
                 var_type = symbolTable['GLOBAL'][var][0]
 
-            node = ASTNode(node_enum(7).name, var, var_type)
+            if var != "":
+                node.value.append(var, var_type)
             # statements_node.add(node.value, node)
             i+=1
+
+        ast_stack.push(node)
+        print(";Pushed READ node")
+        node.pprint()
 
     # Exit a parse tree produced by LittleParser#read_stmt.
     def exitRead_stmt(self, ctx:LittleParser.Read_stmtContext):
