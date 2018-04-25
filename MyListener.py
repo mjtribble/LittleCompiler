@@ -88,6 +88,7 @@ class MyListener(LittleListener):
                         else:
                             print("name " + var_name + " type " + values[var_name][0])
 
+
     # getScopeNum method to create numbered block names for conditionals
     def getScopeNum(self):
         global block
@@ -143,9 +144,20 @@ class MyListener(LittleListener):
         node = ASTNode(node_enum(13).name, [], "")
 
         else_node = ast_stack.pop()
+        print("Pop else node")
+        print(else_node)
+
         sl_node = ast_stack.pop()
+        print("Pop stmtlist node")
+        print(sl_node)
+
         comp_node = ast_stack.pop()
+        print("Pop comp_op node")
+        print(comp_node)
+
         label = ast_stack.pop()
+        print("Pop label node")
+        print(label)
 
         node.val_type = label
         node.value.append(comp_node)
@@ -157,7 +169,7 @@ class MyListener(LittleListener):
         ast_stack.push(node)
         print(";Pushed IF node")
 
-        print('; Node: TYPE: IF VALUE :%s [ %s,  %s,  %s]' % (node.val_type.value, node.value[0].pprint(), node.value[1].pprint(), node.value[2].pprint()))
+        print(node)
         print(";Exit If Statement")
 
 
@@ -189,14 +201,14 @@ class MyListener(LittleListener):
 
         node = ASTNode(node_enum(15).name, [stmtList], label)
         print(";Pushed ELSE node")
-        node.pprint()
+        print(node)
         print(';Exited ElsePart ')
 
 
 
     # Enter a parse tree produced by LittleParser#while_stmt.
     def enterWhile_stmt(self, ctx:LittleParser.While_stmtContext):
-
+        ast_stack.printStack()
         print(';Enter While')
         # for child in ctx.getChildren():
         #     print(child.getText())
@@ -209,15 +221,28 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#while_stmt.
     def exitWhile_stmt(self, ctx:LittleParser.While_stmtContext):
+
+        print("Exiting While start")
         self.exitScope()
+        node = ASTNode(node_enum(14).name, [])
 
-        comp_op = ast_stack.pop()
         stmt_list = ast_stack.pop()
+        print("Pop stmtlist node")
+        print(stmt_list)
+        comp_op = ast_stack.pop()
+        print("Pop compop node")
+        print(comp_op)
         label = ast_stack.pop()
+        print("Pop label node")
+        print(label)
 
-        node = ASTNode(node_enum(14).name, [comp_op, stmt_list], label)
+        node.value.append(comp_op)
+        node.value.append(stmt_list)
+        node.val_type = label
+
         print(";Pushed WHILE node")
-        node.pprint()
+        print(node)
+        ast_stack.push(node)
         print(";Exited While")
 
      # Enter a parse tree produced by LittleParser#var_decl.
@@ -398,7 +423,7 @@ class MyListener(LittleListener):
 
         ast_stack.push(assexp_node)
         print(";Push ASSEXP node")
-        assexp_node.pprint()
+        print(assexp_node)
 
         # statements_node.add(id_node.value, assexp_node)
         # statements_node.assPrint()
@@ -455,7 +480,7 @@ class MyListener(LittleListener):
 
         ast_stack.push(node)
         print(";Pushed READ node")
-        node.pprint()
+        print(node)
 
     # Exit a parse tree produced by LittleParser#read_stmt.
     def exitRead_stmt(self, ctx:LittleParser.Read_stmtContext):
@@ -494,7 +519,7 @@ class MyListener(LittleListener):
 
         ast_stack.push(node)
         print(";Pushed WRITE node")
-        node.pprint()
+        print( node )
     # Exit a parse tree produced by LittleParser#write_stmt.
     def exitWrite_stmt(self, ctx:LittleParser.Write_stmtContext):
         pass
@@ -560,14 +585,17 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#cond.
     def exitCond(self, ctx:LittleParser.CondContext):
-        # print(";exitCond start")
+        print(";exitCond start")
 
         exp2 = ast_stack.pop()
-        # print("pop exp2")
+        print("pop exp2")
+        print(exp2)
         compop = ast_stack.pop()
-        # print("pop compop")
+        print("pop compop")
+        print(compop)
         exp1 = ast_stack.pop()
-        # print("pop exp2")
+        print("pop exp1")
+        print(exp1)
 
         compop.rightChild = exp2
         compop.leftChild = exp1
@@ -575,10 +603,10 @@ class MyListener(LittleListener):
         # print("compop.leftChild = exp1")
 
         ast_stack.push(compop)
-        # print("Compop pushed")
-        # compop.pprint()
+        print("Compop pushed")
+        print(compop)
         # pass
-        # print("exit conditional")
+        print("exit conditional")
 
 
     # Enter a parse tree produced by LittleParser#compop.
@@ -603,8 +631,8 @@ class MyListener(LittleListener):
         if ctx.getChildCount() == 0:
             node = ASTNode(node_enum(6).name, [])
             ast_stack.push(node)
-            print(';Last Statement List, Push Placeholder node')
-            node.pprint()
+            # print(';Last Statement List, Push Placeholder node')
+            # print(node)
         # for child in ctx.getChildren():
         #     print(child.getText())
         # pass
@@ -613,28 +641,30 @@ class MyListener(LittleListener):
     def exitStmt_list(self, ctx:LittleParser.Stmt_listContext):
         print(";exit Stmt_list start")
 
+        ast_stack.printStack()
         # if the top of the stack is a placeholder, create an empty STMTLIST node and push
         if ast_stack.peek().node_type == node_enum(6).name:
             ast_stack.pop()
             node = ASTNode(node_enum(5).name, [])
             ast_stack.push(node)
-            print(";Popped placeholder and replaced with empty STMTLIST node")
-            node.pprint()
+            # print(";Popped placeholder and replaced with empty STMTLIST node")
+            # node.pprint()
+            # print(node)
 
         # add a statement to the statement list and push back on to stack
         else:
             sl = ast_stack.pop()
             print("Popped Statement list")
-            sl.pprint()
+            print(sl)
             stmt = ast_stack.pop()
             print("Popped Statement Node")
-            stmt.pprint()
+            print(stmt)
 
             sl.value.append(stmt)
 
             ast_stack.push(sl)
             print(";Added stmt to Statement List and PUSHED")
-            sl.pprint()
+            print(sl)
 
 
 
