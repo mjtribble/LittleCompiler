@@ -127,7 +127,7 @@ class MyListener(LittleListener):
         name = "BLOCK " + num
         self.enterScope(name)
         # statements_node.add('', ASTNode(node_enum(10).name, "label" + num))
-        print("Enter If Statement")
+        print(";Enter If Statement")
         # for child in ctx.getChildren():
         #     print(child.getText())
 
@@ -136,11 +136,33 @@ class MyListener(LittleListener):
     def exitIf_stmt(self, ctx:LittleParser.If_stmtContext):
         self.exitScope()
 
+        # and IF node will have a list of two or three nodes. [COMPOP, STMTLIST, STMTLIST]
+        # or if there is no elsepart just [COMPOP, STMTLIST]
+        node = ASTNode(node_enum(13), [], "")
+
+        else_node = ast_stack.pop()
+        sl_node = ast_stack.pop()
+        comp_node = ast_stack.pop()
+
+        node.value.append(comp_node)
+        node.value.append(sl_node)
+
+        if else_node.node_type != node_enum.PLACEHOLDER.name:
+            node.value.append(else_node)
+
+        print(";Pushed IF node")
+        node.pprint()
+        print(";Exit If Statement")
+
+
 
     # Enter a parse tree produced by LittleParser#else_part.
     def enterElse_part(self, ctx:LittleParser.Else_partContext):
+        print(";Enter ElsePart")
         if ctx.getChildCount() == 0:
-            pass
+            node = ASTNode(node_enum(6).name, "" ) #Placeholder node
+            ast_stack.push(node)
+            print(";Pushed Placeholder")
         else:
             num = self.getScopeNum()
             name = "BLOCK " + num
@@ -304,7 +326,7 @@ class MyListener(LittleListener):
 
     # Enter a parse tree produced by LittleParser#assign_expr.
     def enterAssign_expr(self, ctx:LittleParser.Assign_exprContext):
-        print(";Enter Assignment")
+        # print(";Enter Assignment")
         var1 = ctx.getChild(0).getText()
         var2 = ctx.getChild(1).getText()
         var_type = ""
@@ -328,7 +350,7 @@ class MyListener(LittleListener):
     # we will add the ass_exp tree to the statement_list node's list of assignments statments.
     # Exit a parse tree produced by LittleParser#assign_expr.
     def exitAssign_expr(self, ctx:LittleParser.Assign_exprContext):
-        print(";Exit Assignment")
+        # print(";Exit Assignment")
 
         exp_node = ast_stack.pop()
         #pop assexp node
@@ -375,7 +397,7 @@ class MyListener(LittleListener):
 
     # Enter a parse tree produced by LittleParser#read_stmt.
     def enterRead_stmt(self, ctx:LittleParser.Read_stmtContext):
-        print(";Enter Read Statement")
+        # print(";Enter Read Statement")
         i = 0
         # A read node's values will be a list of tuples [(variable, type), (var, type)]
         node = ASTNode(node_enum(7).name, [], "")
@@ -402,8 +424,8 @@ class MyListener(LittleListener):
 
     # Exit a parse tree produced by LittleParser#read_stmt.
     def exitRead_stmt(self, ctx:LittleParser.Read_stmtContext):
-        print(";Exit Read")
-        # pass
+        # print(";Exit Read")
+        pass
 
     # Enter a parse tree produced by LittleParser#write_stmt.
     def enterWrite_stmt(self, ctx:LittleParser.Write_stmtContext):
@@ -444,14 +466,14 @@ class MyListener(LittleListener):
         # print(";Exit Write")
     # Enter a parse tree produced by LittleParser#return_stmt.
     def enterReturn_stmt(self, ctx:LittleParser.Return_stmtContext):
-        # pass
-        print(";enter return statement")
+        pass
+        # print(";enter return statement")
         # print(ctx.getText())
 
     # Exit a parse tree produced by LittleParser#return_stmt.
     def exitReturn_stmt(self, ctx:LittleParser.Return_stmtContext):
-        # pass
-        print(";exit return statement")
+        pass
+        # print(";exit return statement")
 
     # Enter a parse tree produced by LittleParser#primary.
     def enterPrimary(self, ctx:LittleParser.PrimaryContext):
@@ -519,7 +541,7 @@ class MyListener(LittleListener):
 
         ast_stack.push(compop)
         # print("Compop pushed")
-        compop.pprint()
+        # compop.pprint()
         # pass
         # print("exit conditional")
 
