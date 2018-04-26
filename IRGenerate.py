@@ -97,7 +97,6 @@ class IRGenerate:
                 opType = self.getOpType(root.value)
                 op = self.returnOperator(opType, tempType)
                 node = IRNode(op, left_obj.resultLoc, right_obj.resultLoc, tempLoc)
-                node.printIR()
                 
                 tiny_list.append(node.operator_map[op](node))
                 current_code.append(node)
@@ -126,7 +125,7 @@ class IRGenerate:
                 
             elif root.node_type == node_enum(10).name:
                 node = IRNode("LABEL", '', '', root.value)
-                node.printIR()
+                # node.printIR()
                 tiny_list.append(node.operator_map["LABEL"](node))
                 current_code.append(node)
                 # print("Write node contents: " + root.val_type + " " + root.value)
@@ -138,68 +137,83 @@ class IRGenerate:
 
             # if the node is a while node
             elif root.node_type == node_enum(14).name:
-            	#use the while label to find the destination label
-            	tempLoc = self.jumpLabel(root.val_type.value)
-            	#get the comparison operator
-            	comp = root.value[0].value
-            	#not super sure if I need to do this
-            	#if so, recurse on the nodes in the value list
-            	for value in root.value:
-            		self.postOrder(value)
-            	#for the IRNodes that are in the current_code list, find the node for the comparison operator
-            	for code in current_code:
-            	# if you find the correct node, remove the node so it can be modified
-                    if comp == code.operation:
-                        node = current_code.remove(code)
-                        node.result = tempLoc
-                        current_code.append(node)
-                        tiny_list.append(node.operator_map[node.operator](node))
+                #use the while label to find the destination label
+                tempLoc = self.jumpLabel(root.val_type.value)
+                #get the comparison operator
+                comp = root.value[0].value
+                tiny_code = 'label ' + root.val_type.value
+                tiny_list.append(tiny_code)
+                # print(root.val_type.value)
+                #for the IRNodes that are in the current_code list, find the node for the comparison
+                #operator
+                # for code in current_code:
+                #     # if you find the correct node, remove the node so it can be modified
+                #     print(";Comparison: " + comp)
+                #     print(";Operation: " + code.operation)
+                #     if comp == code.operation:
+                #         node = current_code.remove(code)
+                #         node.result = tempLoc
+                #         current_code.append(node)
+                #         tiny_list.append(node.operator_map[node.operator](node))
+                #not super sure if I need to do this
+                #if so, recurse on the nodes in the value list
+                for value in root.value:
+                    self.postOrder(value)
             
+            #if the node is a COMPOP, find its value and create an IR node		
             elif root.node_type == node_enum(9).name:
             	tempType = left_obj.resType
             	opType = self.getOpType(root.value)
             	op = self.returnOperator(opType, tempType)
             	node = IRNode(op, left_obj.resultLoc, right_obj.resultLoc, '')
-            	node.printIR()
+            # 	print('IR inside compop')
+            # 	node.printIR()
+            	tiny_list.append(node.operator_map[op](node))
             	current_code.append(node)
             	
+            #if the node if an IF node
             elif root.node_type == node_enum(13).name:
-               #use the while label to find the destination label
-            	tempLoc = self.jumpLabel(root.val_type.value)
-            # 	print(tempLoc)
-            	#get the comparison operator
-            	comp = root.value[0].value
-            	#not super sure if I need to do this
+                #use the if label to find the destination label
+                tempLoc = self.jumpLabel(root.val_type.value)
+                #get the comparison operator
+                comp = root.value[0].value
+                tiny_code = 'label ' + root.val_type.value
+                tiny_list.append(tiny_code)
             	#if so, recurse on the nodes in the value list
-            	for value in root.value:
-            		self.postOrder(value)
-            	#for the IRNodes that are in the current_code list, find the node for the comparison operator
-            	for code in current_code:
-            	# if you find the correct node, remove the node so it can be modified
-                    if comp == code.operation:
-                        node = current_code.remove(code)
-                        node.result = tempLoc
-                        current_code.append(node)
-                        tiny_list.append(node.operator_map[node.operator](node)) 
+                for value in root.value:
+                    self.postOrder(value)
+            	
+            	#for the IRNodes that are in the current_code list, find the node for the comparison
+            	#operator
+            # 	for code in current_code:
+            # 	    # if you find the correct node, remove the node so it can be modified
+            # 	    if comp == code.operation:
+            # 	        node = current_code.remove(code)
+            # 	        node.result = tempLoc
+            # 	        current_code.append(node)
+            # 	        tiny_list.append(node.operator_map[node.operator](node)) 
                         
+            #if the node is an ELSE node
             elif root.node_type == node_enum(15).name:
-               #use the while label to find the destination label
-            	tempLoc = self.jumpLabel(root.val_type.value)
-            # 	print(tempLoc)
-            	#get the comparison operator
-            	comp = root.value[0].value
-            	#not super sure if I need to do this
-            	#if so, recurse on the nodes in the value list
-            	for value in root.value:
-            		self.postOrder(value)
-            	#for the IRNodes that are in the current_code list, find the node for the comparison operator
-            	for code in current_code:
-            	# if you find the correct node, remove the node so it can be modified
-                    if comp == code.operation:
-                        node = current_code.remove(code)
-                        node.result = tempLoc
-                        current_code.append(node)
-                        tiny_list.append(node.operator_map[node.operator](node)) 
+                #use the if label to find the destination label
+                tempLoc = self.jumpLabel(root.val_type.value)
+                #get the comparison operator
+                comp = root.value[0].value
+                tiny_code = 'label ' + root.val_type.value
+                tiny_list.append(tiny_code)
+                #not super sure if I need to do this
+                #if so, recurse on the nodes in the value list
+                for value in root.value:
+                    self.postOrder(value)
+                #for the IRNodes that are in the current_code list, find the node for the comparison
+                #operator
+                # for code in current_code:
+                # # if you find the correct node, remove the node so it can be modified
+                #     if comp == code.operation:
+                #         node = current_code.remove(code)
+                #         node.result = tempLoc
+                #         current_code.append(node)
+                #         tiny_list.append(node.operator_map[node.operator](node)) 
             
             # I commented this out because it ended up storing the instructions in the incorrect order
             # if root.leftChild:
@@ -296,12 +310,12 @@ class IRGenerate:
     		'/': 'DIV',
     		'+': 'ADD',
     		'-': 'SUB',
-    		'>': 'GT',
-    		'<': 'LT',
-    		'>=': 'GE',
-    		'<=': 'LE',
-    		'!=': 'NE',
-    		'=': 'EQ',
+    		'>': 'LE',
+    		'<': 'GE',
+    		'>=': 'LT',
+    		'<=': 'GT',
+    		'!=': 'EQ',
+    		'=': 'NE',
     		}[op]
             
     def getTemp(self):
@@ -371,8 +385,6 @@ class IRNode:
             'DIVI': 'divi',
             'DIVF': 'divf',
             'LABEL': 'label',
-            'COMPI': 'cmpi',
-            'COMPF': 'cmpf',
         }[x]
    
    # functions below take IR code and return a string of correct tinycode instructions 
@@ -498,16 +510,90 @@ class IRNode:
         tiny_code = 'label %s' % (self.result)
         return tiny_code
         
-    def cmpi(self):
+    def eqi(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
-        op = self.f(self.operation)
-        tiny_code = 'cmpi %s\n%s %s' % (self.result, op, self.jumpLabel)
+        tiny_code = 'cmpi %s %s\njeq %s' % (self.op1, self.op2, self.result)
         return tiny_code
-    def cmpf(self):
-        tiny_code = 'cmpf %s' % (self.result)
-    #look at tiny code and see what it actually looks like
-    def jmp(self):
-    	pass
+        
+    def eqf(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpf %s %s\njeq %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+    
+    def lei(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpi %s %s\njle %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+    
+    def lef(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpf %s %s\njle %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+    
+    def gei(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpi %s %s\njge %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+    
+    def gef(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpf %s %s\njge %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+        
+    def lti(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpi %s %s\njlt %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+        
+    def ltf(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpf %s %s\njlt %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+        
+    def gti(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpi %s %s\njgt %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+        
+    def gtf(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpf %s %s\njgt %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+        
+    def nei(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpi %s %s\njne %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+        
+    def nef(self):
+        self.op1 = self.changeString(self.op1)
+        self.op2 = self.changeString(self.op2)
+        self.result = self.changeString(self.result)
+        tiny_code = 'cmpf %s %s\njne %s' % (self.op1, self.op2, self.result)
+        return tiny_code
+    	
     
     operator_map = {"STOREI": storei, 
         "STOREF": storef, 
@@ -525,9 +611,19 @@ class IRNode:
         "DIVI": divi, 
         "DIVF": divf, 
         'LABEL': label,
-        'COMPI': cmpi,
-        'COMPF': cmpf,
-        'JUMP': jmp,
+        'EQI': eqi,
+        'EQF': eqf,
+        'LEI': lei,
+        'LEF': lef,
+    	'GEI': gei,
+    	'GEF': gef,
+    	'LTI': lti,
+    	'LTF': ltf,
+        'GTI': gti,
+        'GTF': gtf,
+    	'NEI': nei,
+    	'NEF': nef,
+        
     } 
         
 # This class will hold the structure of 3 address code for the IR representation
@@ -543,13 +639,13 @@ class CodeObject:
         # self.printCO()
 
     def printCO(self):
-        print(";Code Object:")
+        # print(";Code Object:")
         i = 0
         while i < len(self.ir_nodes):
             self.ir_nodes[i].printIR()
             i += 1
-        print(";Result Location: " + self.resultLoc)
-        print(";Result Type: " + self.resType) 
+        # print(";Result Location: " + self.resultLoc)
+        # print(";Result Type: " + self.resType) 
         
     def getCode(self):
         return self.ir_nodes
