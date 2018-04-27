@@ -16,7 +16,7 @@ class node_enum(Enum):
     IF = 13
     WHILE = 14
     ELSE = 15
-
+    END = 16
 # Nodes have a node type, a value( =:, *, a, 1 etc), and a value type (int/float) if relevant.
 class ASTNode:
 

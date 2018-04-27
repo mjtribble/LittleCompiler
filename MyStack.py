@@ -39,4 +39,5 @@ class MyStack:
     def printStack(self):
         print("*******STACK**************")
         for node in self.items:
-            node.pprint()
+            print(node)
+        print("~~~~~~END STACK~~~~~~~~~~~")

@@ -37,18 +37,18 @@ class IRGenerate:
         ast_stack = self.ast_stack.items
         code_list = [] # this will hold the code object.
         for item in ast_stack:
-            code_list.append(self.postOrder(item)) 
+            code_list.append(self.postOrder(item))
 
     def postOrder(self, root):
         if root != None:
             left_obj = self.postOrder(root.leftChild)
             right_obj = self.postOrder(root.rightChild)
-            
+
             tempLoc = ""
             tempType = ""
             current_code = []
-            
-            # if the root is a VARREF node and it does not have a type, it's a const. 
+
+            # if the root is a VARREF node and it does not have a type, it's a const.
             # Create a temp, determine the type, store code in IRnode.
             if root.node_type == node_enum(3).name and root.val_type == "":
                 tempLoc = self.getTemp() #gets a new temp value
@@ -60,12 +60,12 @@ class IRGenerate:
                 node = IRNode(op, root.value, tempType, tempLoc)
                 tiny_list.append(node.operator_map[op](node))
                 current_code.append(node)
-            
-            # if the root is a VARREF variable, store its value and type 
+
+            # if the root is a VARREF variable, store its value and type
             elif root.node_type == node_enum(3).name:
                 tempLoc = root.value
                 tempType = root.val_type
-            
+
             # for READ nodes, iterate through value, type tuples
             elif root.node_type == node_enum(7).name:
                 for tup in root.value:
@@ -76,7 +76,7 @@ class IRGenerate:
                     node = IRNode(op, tempLoc, "", tempLoc)
                     tiny_list.append(node.operator_map[op](node))
                     current_code.append(node)
-            
+
             # if the root is an assignment statement, store the result from the right child
             # into the variable of the left child
             elif root.node_type == node_enum(4).name:
@@ -87,8 +87,8 @@ class IRGenerate:
                 node = IRNode(op, right_obj.resultLoc, "", tempLoc)
                 tiny_list.append(node.operator_map[op](node))
                 current_code.append(node)
-            
-            # if the root is an ADDOP, add/subtract the memory locations together 
+
+            # if the root is an ADDOP, add/subtract the memory locations together
             # and store in a new temp
             elif root.node_type == node_enum(1).name:
                 tempLoc = self.getTemp()
@@ -97,10 +97,10 @@ class IRGenerate:
                 opType = self.getOpType(root.value)
                 op = self.returnOperator(opType, tempType)
                 node = IRNode(op, left_obj.resultLoc, right_obj.resultLoc, tempLoc)
-                
+
                 tiny_list.append(node.operator_map[op](node))
                 current_code.append(node)
-            
+
             # if the root is a MULOP, multiply/divide the child memory locations together
             # and store in a new temp
             elif root.node_type == node_enum(2).name:
@@ -112,8 +112,8 @@ class IRGenerate:
                 node = IRNode(op, left_obj.resultLoc, right_obj.resultLoc, tempLoc)
                 tiny_list.append(node.operator_map[op](node))
                 current_code.append(node)
-            
-            # for WRITE nodes, iterate through value, type tuples    
+
+            # for WRITE nodes, iterate through value, type tuples
             elif root.node_type == node_enum(8).name:
             	for tup in root.value:
             	    tempLoc = tup[0]
@@ -122,125 +122,89 @@ class IRGenerate:
             	    node = IRNode(op, "", "", tempLoc)
             	    tiny_list.append(node.operator_map[op](node))
             	    current_code.append(node)
-                
+
             elif root.node_type == node_enum(10).name:
                 node = IRNode("LABEL", '', '', root.value)
-                # node.printIR()
                 tiny_list.append(node.operator_map["LABEL"](node))
                 current_code.append(node)
-                # print("Write node contents: " + root.val_type + " " + root.value)
-            
-            # iterate through statement list node - not sure what functionality to add here   
+
+            # iterate through statement list node - not sure what functionality to add here
             elif root.node_type == node_enum(5).name:
             	for value in root.value:
             		self.postOrder(value)
 
-            # if the node is a while node
+            # if the node is a WHILE node
             elif root.node_type == node_enum(14).name:
-                #use the while label to find the destination label
-                tempLoc = self.jumpLabel(root.val_type.value)
-                #get the comparison operator
                 comp = root.value[0].value
                 tiny_code = 'label ' + root.val_type.value
                 tiny_list.append(tiny_code)
-                # print(root.val_type.value)
-                #for the IRNodes that are in the current_code list, find the node for the comparison
-                #operator
-                # for code in current_code:
-                #     # if you find the correct node, remove the node so it can be modified
-                #     print(";Comparison: " + comp)
-                #     print(";Operation: " + code.operation)
-                #     if comp == code.operation:
-                #         node = current_code.remove(code)
-                #         node.result = tempLoc
-                #         current_code.append(node)
-                #         tiny_list.append(node.operator_map[node.operator](node))
-                #not super sure if I need to do this
-                #if so, recurse on the nodes in the value list
+
+                #recurse on the nodes in the value list
                 for value in root.value:
                     self.postOrder(value)
-            
-            #if the node is a COMPOP, find its value and create an IR node		
+
+            #if the node is a COMPOP, find its value and create an IR node
             elif root.node_type == node_enum(9).name:
             	tempType = left_obj.resType
             	opType = self.getOpType(root.value)
             	op = self.returnOperator(opType, tempType)
-            	node = IRNode(op, left_obj.resultLoc, right_obj.resultLoc, '')
-            # 	print('IR inside compop')
-            # 	node.printIR()
+            	result = root.val_type.value
+            	node = IRNode(op, left_obj.resultLoc, right_obj.resultLoc, result)
             	tiny_list.append(node.operator_map[op](node))
             	current_code.append(node)
-            	
+
             #if the node if an IF node
             elif root.node_type == node_enum(13).name:
-                #use the if label to find the destination label
-                tempLoc = self.jumpLabel(root.val_type.value)
-                #get the comparison operator
-                comp = root.value[0].value
-                tiny_code = 'label ' + root.val_type.value
-                tiny_list.append(tiny_code)
-            	#if so, recurse on the nodes in the value list
+                # tiny_code = 'label ' + root.val_type.value
+                # tiny_list.append(tiny_code)
+            	#recurse on the nodes in the value list
                 for value in root.value:
                     self.postOrder(value)
-            	
-            	#for the IRNodes that are in the current_code list, find the node for the comparison
-            	#operator
-            # 	for code in current_code:
-            # 	    # if you find the correct node, remove the node so it can be modified
-            # 	    if comp == code.operation:
-            # 	        node = current_code.remove(code)
-            # 	        node.result = tempLoc
-            # 	        current_code.append(node)
-            # 	        tiny_list.append(node.operator_map[node.operator](node)) 
-                        
+
             #if the node is an ELSE node
             elif root.node_type == node_enum(15).name:
-                #use the if label to find the destination label
-                tempLoc = self.jumpLabel(root.val_type.value)
-                #get the comparison operator
-                comp = root.value[0].value
-                tiny_code = 'label ' + root.val_type.value
+                # jump = root.value[1].value[1].value
+                tiny_code = 'label %s' % (root.val_type.value)
                 tiny_list.append(tiny_code)
-                #not super sure if I need to do this
-                #if so, recurse on the nodes in the value list
+                #recurse on the nodes in the value list
                 for value in root.value:
                     self.postOrder(value)
-                #for the IRNodes that are in the current_code list, find the node for the comparison
-                #operator
-                # for code in current_code:
-                # # if you find the correct node, remove the node so it can be modified
-                #     if comp == code.operation:
-                #         node = current_code.remove(code)
-                #         node.result = tempLoc
-                #         current_code.append(node)
-                #         tiny_list.append(node.operator_map[node.operator](node)) 
-            
-            # I commented this out because it ended up storing the instructions in the incorrect order
-            # if root.leftChild:
-            #     for code in left_obj.getCode():
-            #         current_code.append(code)
-            # if root.rightChild:
-            #     for code in right_obj.getCode():
-            #         current_code.append(code)
-            
+
+            #if the node is an END node
+            elif root.node_type == node_enum(16).name:
+                nodes = root.value
+                if root.val_type == 'while':
+                    jump = nodes[0].value
+                    label = nodes[1].value
+                    tiny_code = 'jmp %s\nlabel %s' % (jump, label)
+                    tiny_list.append(tiny_code)
+                elif root.val_type == 'if':
+                    label = nodes[1].value
+                    tiny_code = 'label %s' % (label)
+                    if self.dupCode(tiny_code, tiny_list):
+                        pass
+                    else:
+                        tiny_list.append(tiny_code)
+                elif root.val_type == 'else':
+                    # print("in else end")
+                    label = nodes[1].value
+                    # print(label)
+                    tiny_code = 'jmp %s' % (label)
+                    tiny_list.append(tiny_code)
+
             # adding the code objects to the new list I created
             co = CodeObject(current_code, tempLoc, tempType)
             if co is not None:
                 code_objects.append(co)
             return co
-            
-        # print("ROOT is None, return")
-    
-    # function to figure out which label to jump to
-    def jumpLabel(self, label):
-    	label = list(label)
-    	num = label[5]
-    	num = int(num)
-    	num = num+1
-    	label[5] = str(num)
-    	label = ''.join(label)
-    	return label
-    	
+
+    # method to check for duplicate string
+    def dupCode(self, tiny_code, tiny_list):
+        if tiny_list[len(tiny_list) - 1] == tiny_code:
+            return True
+        else:
+            return False
+
     # Annoying method that return the correct instruction based on the type that is being operated on
     def returnOperator(self, op, op_type):
         if op_type == "INT":
@@ -302,8 +266,8 @@ class IRGenerate:
         else:
             # the WRITE command is the only one that handles strings
             return "WRITES"
-            
-     # function to map the multiply/divide and add/subtract operators 
+
+     # function to map the multiply/divide and add/subtract operators
     def getOpType(self, op):
     	return {
     		'*': 'MULT',
@@ -317,33 +281,33 @@ class IRGenerate:
     		'!=': 'EQ',
     		'=': 'NE',
     		}[op]
-            
+
     def getTemp(self):
         global temp_number
         temp_number += 1
         return "T" + str(temp_number)
-        
-    # method to return the code_objects list to the driver    
+
+    # method to return the code_objects list to the driver
     def getCodeObjects(self):
         return code_objects
-        
-    # method to test for a number and if it is an int or a float   
+
+    # method to test for a number and if it is an int or a float
     def is_number(self, s):
         try:
-            int(s) 
+            int(s)
             return "INT"
         except ValueError:
             return "FLOAT"
-        return False   
-        
+        return False
+
     def getTinyList(self):
         return tiny_list
-        
+
 
 # This class will hold the information about each operation as we traverse the tree,
 # just like the exercise that we did in class
 class IRNode:
-        
+
     def __init__(self, operation, op1, op2, result):
         self.operation = operation   #ADDI, SUBI, MULTI, DIVI, STORE, READ, WRITE
         self.result = result
@@ -355,7 +319,7 @@ class IRNode:
             print(';IRNode: %s %s %s %s' % (self.operation, self.op1, self.op2, self.result))
         else:
             print(";IR node is empty")
-            
+
     def changeString(self, string):
         if string != "":
             if string[0] == "T":
@@ -363,45 +327,45 @@ class IRNode:
                 return string
             else:
                 return string
-        else: 
+        else:
             return string
-    
-   
-    		
-    # function to map IR operators to tinycode instructions        
+
+
+
+    # function to map IR operators to tinycode instructions
     def f(self, x):
         return {
             'READI': 'readi',
             'READF': 'readf',
             'WRITEI': 'writei',
-            'WRITEF': 'writef',
+            'WRITEF': 'writer',
             'WRITES': 'writes',
             'ADDI': 'addi',
-            'ADDF': 'addf',
+            'ADDF': 'addr',
             'SUBI': 'subi',
-            'SUBF': 'subf',
+            'SUBF': 'subr',
             'MULTI': 'muli',
-            'MULTF': 'mulf',
+            'MULTF': 'mulr',
             'DIVI': 'divi',
-            'DIVF': 'divf',
+            'DIVF': 'divr',
             'LABEL': 'label',
         }[x]
-   
-   # functions below take IR code and return a string of correct tinycode instructions 
+
+   # functions below take IR code and return a string of correct tinycode instructions
     def storei(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'move %s %s'% (self.op1, self.result)
         return tiny_code
-     
-    def storef(self):   
+
+    def storef(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'move %s %s'% (self.op1, self.result)
         return tiny_code
-    
+
     def readi(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -409,7 +373,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'sys %s %s'% (op, self.result)
         return tiny_code
-    
+
     def readf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -417,7 +381,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'sys %s %s'% (op, self.result)
         return tiny_code
-    
+
     def writei(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -425,7 +389,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'sys %s %s'% (op, self.result)
         return tiny_code
-    
+
     def writef(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -433,7 +397,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'sys %s %s'% (op, self.result)
         return tiny_code
-    
+
     def writes(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -441,7 +405,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'sys %s %s'% (op, self.result)
         return tiny_code
-    
+
     def addi(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -449,7 +413,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def addf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -457,7 +421,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def subi(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -465,7 +429,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def subf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -473,7 +437,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def muli(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -481,7 +445,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def mulf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -489,7 +453,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def divi(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -497,7 +461,7 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-    
+
     def divf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
@@ -505,111 +469,111 @@ class IRNode:
         op = self.f(self.operation)
         tiny_code = 'move %s %s\n%s %s %s'% (self.op1, self.result, op, self.op2, self.result)
         return tiny_code
-        
+
     def label(self):
         tiny_code = 'label %s' % (self.result)
         return tiny_code
-        
+
     def eqi(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpi %s %s\njeq %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def eqf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpf %s %s\njeq %s' % (self.op1, self.op2, self.result)
         return tiny_code
-    
+
     def lei(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpi %s %s\njle %s' % (self.op1, self.op2, self.result)
         return tiny_code
-    
+
     def lef(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpf %s %s\njle %s' % (self.op1, self.op2, self.result)
         return tiny_code
-    
+
     def gei(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpi %s %s\njge %s' % (self.op1, self.op2, self.result)
         return tiny_code
-    
+
     def gef(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpf %s %s\njge %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def lti(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpi %s %s\njlt %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def ltf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpf %s %s\njlt %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def gti(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpi %s %s\njgt %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def gtf(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpf %s %s\njgt %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def nei(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpi %s %s\njne %s' % (self.op1, self.op2, self.result)
         return tiny_code
-        
+
     def nef(self):
         self.op1 = self.changeString(self.op1)
         self.op2 = self.changeString(self.op2)
         self.result = self.changeString(self.result)
         tiny_code = 'cmpf %s %s\njne %s' % (self.op1, self.op2, self.result)
         return tiny_code
-    	
-    
-    operator_map = {"STOREI": storei, 
-        "STOREF": storef, 
-        "READI": readi, 
-        "READF": readf, 
-        "WRITEI": writei, 
-        "WRITEF": writef, 
-        "WRITES": writes, 
-        "ADDI": addi, 
-        "ADDF": addf, 
-        "SUBI": subi, 
-        "SUBF": subf, 
-        "MULTI": muli, 
-        "MULTF": mulf, 
-        "DIVI": divi, 
-        "DIVF": divf, 
+
+
+    operator_map = {"STOREI": storei,
+        "STOREF": storef,
+        "READI": readi,
+        "READF": readf,
+        "WRITEI": writei,
+        "WRITEF": writef,
+        "WRITES": writes,
+        "ADDI": addi,
+        "ADDF": addf,
+        "SUBI": subi,
+        "SUBF": subf,
+        "MULTI": muli,
+        "MULTF": mulf,
+        "DIVI": divi,
+        "DIVF": divf,
         'LABEL': label,
         'EQI': eqi,
         'EQF': eqf,
@@ -623,9 +587,9 @@ class IRNode:
         'GTF': gtf,
     	'NEI': nei,
     	'NEF': nef,
-        
-    } 
-        
+
+    }
+
 # This class will hold the structure of 3 address code for the IR representation
 class CodeObject:
 
@@ -645,8 +609,8 @@ class CodeObject:
             self.ir_nodes[i].printIR()
             i += 1
         # print(";Result Location: " + self.resultLoc)
-        # print(";Result Type: " + self.resType) 
-        
+        # print(";Result Type: " + self.resType)
+
     def getCode(self):
         return self.ir_nodes
 
